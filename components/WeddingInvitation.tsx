@@ -12,12 +12,12 @@ const STORY_SLIDES = [
   "photo-1520854221256-17451cc331bf",
   "photo-1460364157752-9267c1b7a7c8",
 ];
-const FALLING_HEARTS = Array.from({ length: 16 }, (_, index) => ({
+const FALLING_HEARTS = Array.from({ length: 10 }, (_, index) => ({
   id: index,
   left: `${(index * 23 + 5) % 97}%`,
   delay: `${(index * 1.17) % 9}s`,
   duration: `${10 + (index % 5)}s`,
-  size: `${0.72 + (index % 4) * 0.12}`,
+  size: `${0.48 + (index % 4) * 0.08}`,
   opacity: `${0.34 + (index % 5) * 0.11}`,
 }));
 
@@ -47,8 +47,39 @@ function pad(value: number) {
   return String(value).padStart(2, "0");
 }
 
+function TimelineCard({
+  item,
+  theme,
+  image,
+}: {
+  item: string[] | null;
+  theme: "groom" | "bride";
+  image?: string;
+}) {
+  if (!item) {
+    return (
+      <article className={`timeline-card timeline-card-${theme} timeline-card-empty`}>
+        <img
+          src={image ?? "https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=700&q=82"}
+          alt="Khoảnh khắc chuẩn bị ngày cưới"
+        />
+      </article>
+    );
+  }
+
+  const [time, title, description] = item;
+  return (
+    <article className={`timeline-card timeline-card-${theme}`}>
+      <time>{time}</time>
+      <h3>{title}</h3>
+      <p>{description}</p>
+    </article>
+  );
+}
+
 export default function WeddingInvitation() {
   const [opened, setOpened] = useState(false);
+  const [opening, setOpening] = useState(false);
   const [now, setNow] = useState(Date.now());
   const [quotePosition, setQuotePosition] = useState({ x: 0, y: 0 });
   const [music, setMusic] = useState(true);
@@ -75,7 +106,9 @@ export default function WeddingInvitation() {
   }>>([]);
   const [showCoupleReveal, setShowCoupleReveal] = useState(false);
   const [showGiftReveal, setShowGiftReveal] = useState(false);
+  const [giftAnimating, setGiftAnimating] = useState(false);
   const [savedSignaturesLoaded, setSavedSignaturesLoaded] = useState(false);
+  const heartRainRef = useRef<HTMLDivElement | null>(null);
   const boardRef = useRef<HTMLDivElement | null>(null);
   const signaturePadRef = useRef<HTMLCanvasElement | null>(null);
   const dragOffsetRef = useRef({ x: 0, y: 0 });
@@ -97,6 +130,37 @@ export default function WeddingInvitation() {
       });
     }, 3600);
     return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const heartRain = heartRainRef.current;
+    if (!heartRain) return;
+
+    let previousScrollY = window.scrollY;
+    let previousTime = performance.now();
+    let settleTimer = 0;
+
+    const handleScroll = () => {
+      const currentTime = performance.now();
+      const elapsed = Math.max(currentTime - previousTime, 16);
+      const distance = Math.abs(window.scrollY - previousScrollY);
+
+      previousScrollY = window.scrollY;
+      previousTime = currentTime;
+      if (distance / elapsed < 0.35) return;
+
+      heartRain.classList.add("is-scroll-rushing");
+      window.clearTimeout(settleTimer);
+      settleTimer = window.setTimeout(() => {
+        heartRain.classList.remove("is-scroll-rushing");
+      }, 180);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => {
+      window.removeEventListener("scroll", handleScroll);
+      window.clearTimeout(settleTimer);
+    };
   }, []);
 
   useEffect(() => {
@@ -353,7 +417,7 @@ export default function WeddingInvitation() {
 
   return (
     <main>
-      <div className="heart-rain" aria-hidden="true">
+      <div className="heart-rain" ref={heartRainRef} aria-hidden="true">
         {FALLING_HEARTS.map((heart) => (
           <span
             className="falling-heart"
@@ -362,7 +426,7 @@ export default function WeddingInvitation() {
               {
                 left: heart.left,
                 animationDelay: heart.delay,
-                animationDuration: heart.duration,
+                "--heart-duration": heart.duration,
                 fontSize: `${heart.size}rem`,
                 "--heart-opacity": heart.opacity,
               } as React.CSSProperties
@@ -375,15 +439,29 @@ export default function WeddingInvitation() {
       </div>
       <audio ref={audioRef} src={MUSIC_SRC} loop preload="auto" />
       {!opened && (
-        <section className="cover">
+        <section className={`cover${opening ? " is-opening" : ""}`}>
           <div className="cover-overlay" />
+          <div className="tri-fold-invitation" aria-hidden="true">
+            <div className="fold-panel fold-panel-left">
+              <span>Hữu Tài</span>
+            </div>
+            <div className="fold-panel fold-panel-center">
+              <span></span>
+            </div>
+            <div className="fold-panel fold-panel-right">
+              <span>Hà Thủy</span>
+            </div>
+          </div>
           <div className="cover-content reveal fade-up" data-reveal>
-            <p className="eyebrow">THE WEDDING OF</p>
-            <h1> Hữu Tài <span>&</span> Hà Thủy</h1>
+            <p className="eyebrow cover-wedding-label">THE WEDDING OF</p>
             <p className="cover-date">15 · 10 · 2026</p>
             <button
-              className="primary-button"
+              className="primary-button cover-open-button"
+              aria-label="Mở thiệp cưới T và T"
+              disabled={opening}
               onClick={() => {
+                if (opening) return;
+                setOpening(true);
                 const audio = audioRef.current;
                 if (audio) {
                   audio.volume = 0.4;
@@ -392,12 +470,14 @@ export default function WeddingInvitation() {
                     .then(() => setMusic(true))
                     .catch(() => setMusicError(true));
                 }
-                setOpened(true);
+                window.setTimeout(() => setOpened(true), 900);
               }}
             >
-              MỞ THIỆP
+              <span>T</span>
+              <i>&amp;</i>
+              <span>T</span>
             </button>
-            <p className="hint">Một lời mời nhỏ, một ngày thật đặc biệt.</p>
+            <p className="hint cover-hint">Một lời mời nhỏ, một ngày thật đặc biệt. Hãy cùng chúng mình lưu giữ khoảnh khắc đáng nhớ.</p>
           </div>
         </section>
       )}
@@ -405,12 +485,19 @@ export default function WeddingInvitation() {
       {opened && (
         <>
           <nav className="nav">
-            <a href="#home">T&T</a>
+            <div className="couple-mark" aria-label="Hữu Tài và Hà Thủy">
+              <span className="couple-mark-groom">Hữu Tài</span>
+              <span className="couple-mark-join">&amp;</span>
+              <span className="couple-mark-bride">Hà Thủy</span>
+            </div>
             <div>
-              <a href="#story">Our Story</a>
+              <a href="#story">Câu Chuyện Chúng Tôi</a>
               <a href="#event">The Wedding</a>
-              <a href="#gallery">Gallery</a>
-              <a href="#rsvp">Yêu Thương</a>
+              <a href="#timeline">Timeline</a>
+              <a href="#gallery">Thư Viện</a>
+              <a href="#blessing">Kỷ Niệm</a>
+              <a href="#gift">Gift</a>
+              <a href="#rsvp">Tham dự?</a>
             </div>
           </nav>
 
@@ -437,7 +524,7 @@ export default function WeddingInvitation() {
           </section>
 
           <section id="story" className="section story reveal" data-reveal>
-            <p className="eyebrow">OUR STORY</p>
+            <p className="eyebrow">Câu Chuyện Chúng Tôi</p>
             <h2>Một câu chuyện bắt đầu từ một cuộc gặp gỡ.</h2>
             <p className="lead">
               Có những cuộc gặp gỡ tưởng như tình cờ, nhưng lại trở thành điều
@@ -447,7 +534,7 @@ export default function WeddingInvitation() {
 
             {!showCoupleReveal ? (
               <button
-                className="secondary-button reveal-button"
+                className="secondary-button reveal-button couple-reveal-button"
                 onClick={() => setShowCoupleReveal(true)}
               >
                 XEM ẢNH CÔ DÂU CHÚ RỂ
@@ -478,8 +565,8 @@ export default function WeddingInvitation() {
                 </article>
                 <article className="story-entry story-entry-center">
                   <div className="story-note">
-                    <span>OUR PROMISE</span>
-                    <p>Mỗi ngày bên nhau là một trang mới.</p>
+                    <span className="promise-label">OUR PROMISE</span>
+                    <p className="promise-text">Mỗi ngày bên nhau là một trang mới.</p>
                   </div>
                   <StoryVisual
                     background="photo-1520854221256-17451cc331bf"
@@ -547,52 +634,41 @@ export default function WeddingInvitation() {
             </div>
           </section>
 
-          <section className="section timeline-section reveal" data-reveal>
+          <section id="timeline" className="section timeline-section reveal" data-reveal>
             <p className="eyebrow">THE DAY</p>
             <h2>Wedding Timeline</h2>
             <div className="timeline-grid">
+              <div className="timeline-side-label timeline-side-label-groom">
+                <span>♢</span> NHÀ TRAI
+              </div>
+              <div className="timeline-side-label timeline-side-label-bride">
+                NHÀ GÁI <span>♡</span>
+              </div>
+              <div className="timeline-rail" aria-hidden="true" />
+              <div className="timeline-shared-row timeline-row">
+                <article className="timeline-shared-card">
+                  <time>14/10 · 08:00 - 20:00</time>
+                  <h3>Mời khách &amp; giao lưu văn nghệ</h3>
+                  <p>Đón tiếp người thân, bạn bè, dùng tiệc và cùng nhau ca hát trong ngày hội của hai gia đình.</p>
+                </article>
+              </div>
               {[
-                {
-                  label: "Nhà trai",
-                  theme: "groom",
-                  icon: "♢",
-                  items: [
-                    ["14/10 · 11:00", "Mời khách dùng tiệc", "Gia đình nhà trai đón tiếp người thân, bạn bè và mời khách dùng tiệc thân mật"],
-                    ["14/10 · 20:00", "Ca múa hát giao lưu", "Cùng gia đình, người thân và bạn bè vui chơi, ca múa hát trong buổi tối"],
-                    ["15/10 · 08:05", "Đón dâu về nhà trai", "Đoàn nhà trai đón cô dâu và cùng gia đình di chuyển về nhà trai"],
-                    ["15/10 · 11:00", "Lễ thành hôn", "Gia đình hai bên thực hiện nghi lễ, ra mắt và chúc phúc cho đôi trẻ"],
-                    ["15/10 · 12:30", "Tiệc mừng", "Đón khách, dùng tiệc và chung vui cùng gia đình, người thân, bạn bè đến hết buổi"],
-                  ],
-                },
-                {
-                  label: "Nhà gái",
-                  theme: "bride",
-                  icon: "♡",
-                  items: [
-                    ["14/10 · 11:00", "Mời khách dùng tiệc", "Gia đình nhà gái đón tiếp người thân, bạn bè và mời khách dùng tiệc thân mật"],
-                    ["14/10 · 20:00", "Ca múa hát giao lưu", "Cùng gia đình, người thân và bạn bè vui chơi, ca múa hát trong buổi tối"],
-                    ["15/10 · 06:30", "Chuẩn bị lễ cưới", "Gia đình chuẩn bị lễ vật, không gian và cô dâu cho ngày vui"],
-                    ["15/10 · 07:30", "Lễ vu quy", "Gia đình làm lễ, dặn dò và trao gửi cô dâu về nhà chồng"],
-                    ["15/10 · 08:05", "Cô dâu về nhà trai", "Tiễn cô dâu cùng đoàn đưa dâu, bắt đầu hành trình về nhà trai"],
-                  ],
-                },
-              ].map(({ label, theme, icon, items }) => (
-                <div className={`timeline-column timeline-${theme} reveal fade-up`} data-reveal key={label}>
-                  <div className="timeline-heading">
-                    <span className="timeline-icon" aria-hidden="true">{icon}</span>
-                    <p className="timeline-label">{label}</p>
-                  </div>
-                  <div className="timeline">
-                    {items.map(([time, title, desc]) => (
-                      <div className="timeline-item" key={`${label}-${time}`}>
-                        <time>{time}</time>
-                        <div>
-                          <h3>{title}</h3>
-                          <p>{desc}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                ["15/10 · 06:30", null, ["15/10 · 06:30", "Chuẩn bị lễ cưới", "Gia đình chuẩn bị lễ vật, không gian và cô dâu cho ngày vui"]],
+                ["15/10 · 07:30", null, ["15/10 · 07:30", "Lễ vu quy", "Gia đình làm lễ, dặn dò và trao gửi cô dâu về nhà chồng"]],
+                ["15/10 · 08:05", ["15/10 · 08:05", "Đón dâu về nhà trai", "Đoàn nhà trai đón cô dâu và cùng gia đình di chuyển về nhà trai"], ["15/10 · 08:05", "Cô dâu về nhà trai", "Tiễn cô dâu cùng đoàn đưa dâu, bắt đầu hành trình về nhà trai"]],
+                ["15/10 · 11:00", ["15/10 · 11:00", "Lễ thành hôn", "Gia đình hai bên thực hiện nghi lễ, ra mắt và chúc phúc cho đôi trẻ"], null],
+                ["15/10 · 12:30", ["15/10 · 12:30", "Tiệc mừng", "Đón khách, dùng tiệc và chung vui cùng gia đình, người thân, bạn bè"], null],
+              ].map(([time, groomItem, brideItem], index) => (
+                <div className={`timeline-row timeline-row-${index + 1}`} key={String(time)}>
+                  <TimelineCard
+                    item={groomItem as string[] | null}
+                    theme="groom"
+                    image={index === 0
+                      ? "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=700&q=82"
+                      : "https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=700&q=82"}
+                  />
+                  <div className="timeline-arrow" aria-hidden="true">↓</div>
+                  <TimelineCard item={brideItem as string[] | null} theme="bride" />
                 </div>
               ))}
             </div>
@@ -627,7 +703,7 @@ export default function WeddingInvitation() {
             </div>
           </section>
 
-          <section className="section blessing-section reveal" data-reveal>
+          <section id="blessing" className="section blessing-section reveal" data-reveal>
             <p className="eyebrow">CONGRATULATIONS</p>
             <h2>Give us a heart</h2>
 
@@ -786,16 +862,24 @@ export default function WeddingInvitation() {
             </div>
           </section>
 
-          <section className="section gift-section reveal" data-reveal>
+          <section id="gift" className="section gift-section reveal" data-reveal>
             <p className="eyebrow">WEDDING GIFT</p>
             <h2>Gửi một chút yêu thương tới vợ chồng mình nhé!</h2>
 
             {!showGiftReveal ? (
               <button
-                className="secondary-button reveal-button"
-                onClick={() => setShowGiftReveal(true)}
+                className={`secondary-button reveal-button gift-transfer-button${giftAnimating ? " is-sending" : ""}`}
+                aria-label="Mở thông tin chuyển khoản ngân hàng"
+                title="Mở thông tin chuyển khoản ngân hàng"
+                disabled={giftAnimating}
+                onClick={() => {
+                  setGiftAnimating(true);
+                  window.setTimeout(() => setShowGiftReveal(true), 520);
+                }}
               >
-                GIVE A GIFT
+                <span className="gift-money gift-money-left" aria-hidden="true">$</span>
+                <span className="gift-transfer-icon" aria-hidden="true">⇄</span>
+                <span className="gift-money gift-money-right" aria-hidden="true">$</span>
               </button>
             ) : (
               <div className="gift-grid reveal fade-up" data-reveal>
@@ -852,14 +936,17 @@ export default function WeddingInvitation() {
                 transform: `translate(calc(-50% + ${quotePosition.x}px), calc(-50% + ${quotePosition.y}px))`,
               }}
             >
-              <span>“</span>
+              <span className="quote-mark quote-mark-open">“</span>
               <p>Two souls, one heart, one beautiful journey.</p>
-              <small>— Hữu Tài & Hà Thủy —</small>
+              <span className="quote-mark quote-mark-close">”</span>
+              <small className="quote-signature">
+                — Hữu Tài <span className="quote-heart" aria-hidden="true">♥</span> Hà Thủy —
+              </small>
             </div>
           </section>
 
           <section id="rsvp" className="section rsvp-section reveal" data-reveal>
-            <p className="eyebrow">Yêu Thương</p>
+            <p className="eyebrow">Tham dự lễ thành hôn</p>
             <h2>Chung vui cùng chúng mình nhé?</h2>
             {sent ? (
               <div className="success">
@@ -920,9 +1007,15 @@ export default function WeddingInvitation() {
 
           <footer>
             <p className="eyebrow">WITH LOVE</p>
-            <h2>Hữu Tài & Hà Thủy</h2>
+            <h2 className="footer-title" aria-label="Hữu Tài và Hà Thủy">
+              {"Hữu Tài & Hà Thủy".split("").map((character, index) => (
+                <span key={`${character}-${index}`}>
+                  {character === " " ? "\u00a0" : character}
+                </span>
+              ))}
+            </h2>
             <p>15 · 10 · 2026</p>
-            {musicError && <p className="music-error"></p>}
+            <p className="footer-credit">A little piece of love, crafted ❤️ by chú rể Hữu Tài</p>
           </footer>
         </>
       )}
