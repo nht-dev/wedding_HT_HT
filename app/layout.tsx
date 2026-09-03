@@ -4,6 +4,9 @@ import "./globals.css";
 export const metadata: Metadata = {
   title: "Hữu Tài & Hà Thủy — Wedding Invitation",
   description: "Thiệp cưới online của Hữu Tài & Hà Thủy",
+  icons: {
+    icon: "./favicon.png",
+  },
 };
 
 export default function RootLayout({

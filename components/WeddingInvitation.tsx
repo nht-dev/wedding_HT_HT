@@ -4,6 +4,36 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 const EVENT_DATE = new Date("2026-10-15T11:00:00+07:00").getTime();
 const MUSIC_SRC = "/audio/vay-cuoi.mp3";
+const SAVED_SIGNATURES_KEY = "wedding-saved-signatures";
+const STORY_SLIDES = [
+  "photo-1519741497674-611481863552",
+  "photo-1519225421980-715cb0215aed",
+  "photo-1511285560929-80b456fea0bc",
+  "photo-1520854221256-17451cc331bf",
+  "photo-1460364157752-9267c1b7a7c8",
+];
+
+function StoryVisual({ background, label }: { background: string; label: string }) {
+  return (
+    <div className="story-visual" aria-label={label}>
+      <img
+        className="story-photo-background"
+        src={`https://images.unsplash.com/${background}?auto=format&fit=crop&w=1000&q=85`}
+        alt={label}
+      />
+      <div className="story-slides">
+        {STORY_SLIDES.map((id, index) => (
+          <img
+            className={`story-slide story-slide-${index + 1}`}
+            key={id}
+            src={`https://images.unsplash.com/${id}?auto=format&fit=crop&w=700&q=85`}
+            alt={`Khoảnh khắc cưới ${index + 1}`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
 
 function pad(value: number) {
   return String(value).padStart(2, "0");
@@ -12,19 +42,36 @@ function pad(value: number) {
 export default function WeddingInvitation() {
   const [opened, setOpened] = useState(false);
   const [now, setNow] = useState(Date.now());
+  const [quotePosition, setQuotePosition] = useState({ x: 0, y: 0 });
   const [music, setMusic] = useState(true);
   const [musicError, setMusicError] = useState(false);
   const [attendance, setAttendance] = useState("yes");
   const [sent, setSent] = useState(false);
+  const [rsvpError, setRsvpError] = useState("");
+  const [wishes, setWishes] = useState<Array<{
+    id: string | number;
+    name: string;
+    message: string;
+    attendance: string;
+  }>>([]);
   const [signaturePosition, setSignaturePosition] = useState({ x: 210, y: 180 });
+  const [signatureScale, setSignatureScale] = useState(1);
   const [signatureData, setSignatureData] = useState("");
   const [signed, setSigned] = useState(false);
+  const [savedSignatures, setSavedSignatures] = useState<Array<{
+    id: number;
+    data: string;
+    x: number;
+    y: number;
+    scale: number;
+  }>>([]);
   const [showCoupleReveal, setShowCoupleReveal] = useState(false);
   const [showGiftReveal, setShowGiftReveal] = useState(false);
+  const [savedSignaturesLoaded, setSavedSignaturesLoaded] = useState(false);
   const boardRef = useRef<HTMLDivElement | null>(null);
-  const signatureRef = useRef<HTMLImageElement | null>(null);
   const signaturePadRef = useRef<HTMLCanvasElement | null>(null);
   const dragOffsetRef = useRef({ x: 0, y: 0 });
+  const draggingSavedSignatureRef = useRef<number | null>(null);
   const isDraggingRef = useRef(false);
   const isDrawingRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
@@ -32,6 +79,52 @@ export default function WeddingInvitation() {
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const timer = window.setInterval(() => {
+      setQuotePosition({
+        x: Math.round((Math.random() - 0.5) * 120),
+        y: Math.round((Math.random() - 0.5) * 70),
+      });
+    }, 3600);
+    return () => window.clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    fetch("/api/signatures")
+      .then(async (response) => {
+        if (!response.ok) throw new Error("Unable to load signatures");
+        const result = await response.json();
+        if (result.configured) {
+          setSavedSignatures(result.signatures);
+          return;
+        }
+        const saved = window.localStorage.getItem(SAVED_SIGNATURES_KEY);
+        if (saved) setSavedSignatures(JSON.parse(saved));
+      })
+      .catch(() => {
+        const saved = window.localStorage.getItem(SAVED_SIGNATURES_KEY);
+        if (saved) setSavedSignatures(JSON.parse(saved));
+      })
+      .finally(() => setSavedSignaturesLoaded(true));
+  }, []);
+
+  useEffect(() => {
+    if (!savedSignaturesLoaded) return;
+    window.localStorage.setItem(
+      SAVED_SIGNATURES_KEY,
+      JSON.stringify(savedSignatures)
+    );
+  }, [savedSignatures, savedSignaturesLoaded]);
+
+  useEffect(() => {
+    fetch("/api/rsvp")
+      .then((response) => response.ok ? response.json() : null)
+      .then((result) => {
+        if (result?.wishes) setWishes(result.wishes);
+      })
+      .catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -77,9 +170,37 @@ export default function WeddingInvitation() {
     };
   }, [now]);
 
-  const submitRsvp = (event: React.FormEvent<HTMLFormElement>) => {
+  const submitRsvp = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    setSent(true);
+    setRsvpError("");
+    const formData = new FormData(event.currentTarget);
+    const submitted = Object.fromEntries(formData.entries());
+    try {
+      const response = await fetch("/api/rsvp", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(submitted),
+      });
+
+      if (!response.ok) {
+        const result = await response.json().catch(() => null);
+        setRsvpError(result?.error ?? "Không thể gửi xác nhận lúc này.");
+        return;
+      }
+
+      setWishes((previous) => [
+        ...previous,
+        {
+          id: Date.now(),
+          name: String(submitted.name),
+          message: String(submitted.message || ""),
+          attendance: String(submitted.attendance),
+        },
+      ]);
+      setSent(true);
+    } catch {
+      setRsvpError("Không thể kết nối máy chủ. Vui lòng thử lại.");
+    }
   };
 
   const clamp = (value: number, min: number, max: number) =>
@@ -132,11 +253,38 @@ export default function WeddingInvitation() {
     context.clearRect(0, 0, canvas.width, canvas.height);
     setSignatureData("");
     setSigned(false);
+    setSignatureScale(1);
+    setSignaturePosition({ x: 12, y: 12 });
+  };
+
+  const saveSignature = async () => {
+    if (!signatureData) return;
+    const signature = {
+      data: signatureData,
+      x: signaturePosition.x,
+      y: signaturePosition.y,
+      scale: signatureScale,
+    };
+    try {
+      const response = await fetch("/api/signatures", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(signature),
+      });
+      if (!response.ok) throw new Error("Unable to save signature");
+      const result = await response.json();
+      setSavedSignatures((previous) => [...previous, result.signature]);
+    } catch {
+      setSavedSignatures((previous) => [...previous, { id: Date.now(), ...signature }]);
+    }
+    clearSignature();
+    const offset = ((savedSignatures.length + 1) % 5) * 24;
+    setSignaturePosition({ x: 12 + offset, y: 12 + offset });
   };
 
   const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
     const board = boardRef.current;
-    const signature = signatureRef.current;
+    const signature = event.target as HTMLImageElement;
     if (!board || !signature) return;
 
     const signatureRect = signature.getBoundingClientRect();
@@ -146,6 +294,9 @@ export default function WeddingInvitation() {
     };
 
     isDraggingRef.current = true;
+    draggingSavedSignatureRef.current = signature.dataset.signatureId
+      ? Number(signature.dataset.signatureId)
+      : null;
     board.setPointerCapture(event.pointerId);
   };
 
@@ -153,8 +304,14 @@ export default function WeddingInvitation() {
     if (!isDraggingRef.current || !boardRef.current) return;
 
     const boardRect = boardRef.current.getBoundingClientRect();
-    const maxX = boardRect.width - 180;
-    const maxY = boardRect.height - 60;
+    const savedSignature = savedSignatures.find(
+      (signature) => signature.id === draggingSavedSignatureRef.current
+    );
+    const activeScale = savedSignature?.scale ?? signatureScale;
+    const stickerWidth = 180 * activeScale;
+    const stickerHeight = 70 * activeScale;
+    const maxX = boardRect.width - stickerWidth - 12;
+    const maxY = boardRect.height - stickerHeight - 12;
 
     const nextX = clamp(
       event.clientX - boardRect.left - dragOffsetRef.current.x,
@@ -167,11 +324,22 @@ export default function WeddingInvitation() {
       Math.max(12, maxY)
     );
 
-    setSignaturePosition({ x: nextX, y: nextY });
+    if (savedSignature) {
+      setSavedSignatures((previous) =>
+        previous.map((signature) =>
+          signature.id === savedSignature.id
+            ? { ...signature, x: nextX, y: nextY }
+            : signature
+        )
+      );
+    } else {
+      setSignaturePosition({ x: nextX, y: nextY });
+    }
   };
 
   const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
     isDraggingRef.current = false;
+    draggingSavedSignatureRef.current = null;
     boardRef.current?.releasePointerCapture(event.pointerId);
   };
 
@@ -214,7 +382,7 @@ export default function WeddingInvitation() {
               <a href="#story">Our Story</a>
               <a href="#event">The Wedding</a>
               <a href="#gallery">Gallery</a>
-              <a href="#rsvp">RSVP</a>
+              <a href="#rsvp">Yêu Thương</a>
             </div>
           </nav>
 
@@ -237,7 +405,7 @@ export default function WeddingInvitation() {
               <h1> Hữu Tài <span>&</span> Hà Thủy</h1>
               <p>15.10.2026 · Thanh Hóa</p>
             </div>
-            <div className="scroll">SCROLL ↓</div>
+            <div className="scroll">Kéo xuống↓</div>
           </section>
 
           <section id="story" className="section story reveal" data-reveal>
@@ -258,22 +426,55 @@ export default function WeddingInvitation() {
               </button>
             ) : (
               <div className="story-grid reveal fade-up" data-reveal>
-                <img src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=1000&q=85" alt="Couple" />
-                <div className="story-note">
-                  <span>15 / 10 / 2026</span>
-                  <h3>And so the adventure begins...</h3>
-                  <p>
-                    Cảm ơn vì đã trở thành một phần trong hành trình của chúng
-                    mình.
-                  </p>
-                </div>
+                <article className="story-entry story-entry-left">
+                  <StoryVisual
+                    background="photo-1519741497674-611481863552"
+                    label="Cô dâu và chú rể"
+                  />
+                  <div className="story-note">
+                    <span>15 / 10 / 2026</span>
+                    <h3>And so the adventure begins...</h3>
+                    <p>Cảm ơn vì đã trở thành một phần trong hành trình của chúng mình.</p>
+                  </div>
+                </article>
+                <article className="story-entry story-entry-right">
+                  <div className="story-note">
+                    <span>THE FIRST CHAPTER</span>
+                    <h3>From this moment, together.</h3>
+                    <p>Những khoảnh khắc giản dị đã viết nên câu chuyện riêng của hai chúng mình.</p>
+                  </div>
+                  <StoryVisual
+                    background="photo-1511285560929-80b456fea0bc"
+                    label="Khoảnh khắc đầu tiên của đôi uyên ương"
+                  />
+                </article>
+                <article className="story-entry story-entry-center">
+                  <div className="story-note">
+                    <span>OUR PROMISE</span>
+                    <p>Mỗi ngày bên nhau là một trang mới.</p>
+                  </div>
+                  <StoryVisual
+                    background="photo-1520854221256-17451cc331bf"
+                    label="Khoảnh khắc hạnh phúc của cô dâu chú rể"
+                  />
+                  <div className="story-note">
+                    <span>FOREVER STARTS HERE</span>
+                    <p>Và hôm nay, chúng mình muốn viết tiếp cùng những người thương yêu.</p>
+                  </div>
+                </article>
               </div>
             )}
           </section>
 
           <section id="event" className="section event-section reveal" data-reveal>
             <p className="eyebrow">SAVE THE DATE</p>
-            <h2>THE WEDDING</h2>
+            <h2 className="event-title" aria-label="THE WEDDING">
+              {"THE WEDDING".split("").map((character, index) => (
+                <span key={`${character}-${index}`}>
+                  {character === " " ? "\u00a0" : character}
+                </span>
+              ))}
+            </h2>
             <div className="countdown">
               {[
                 ["days", countdown.days],
@@ -289,25 +490,31 @@ export default function WeddingInvitation() {
             </div>
 
             <div className="event-grid reveal fade-up" data-reveal>
-              <div>
+              <div className="event-groom">
                 <span className="event-icon">♡</span>
                 <h3>Wedding Ceremony</h3>
                 <p>18:00 · Thứ Ba</p>
                 <p>15 tháng 10, 2026</p>
+                <iframe
+                  className="ceremony-map"
+                  title="Bản đồ nhà trai"
+                  src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d933.0468070926343!2d105.4565710965466!3d19.97122584026793!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e1!3m2!1sen!2s!4v1788414900773!5m2!1sen!2s"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
               </div>
-              <div>
+              <div className="event-bride">
                 <span className="event-icon">⌖</span>
                 <h3>ABC Wedding Center</h3>
                 <p>123 Phố Hoàng Diệu</p>
                 <p>Ba Đình, Hà Nội</p>
-                <a
-                  className="text-link"
-                  href="https://www.google.com/maps/search/?api=1&query=Hanoi"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  XEM BẢN ĐỒ →
-                </a>
+                <iframe
+                  className="ceremony-map"
+                  title="Bản đồ nhà gái"
+                  src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d658.8001155960343!2d104.86627166744569!3d20.20024267734962!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e1!3m2!1sen!2s!4v1788414966559!5m2!1sen!2s"
+                  loading="lazy"
+                  referrerPolicy="no-referrer-when-downgrade"
+                />
               </div>
             </div>
           </section>
@@ -319,6 +526,8 @@ export default function WeddingInvitation() {
               {[
                 {
                   label: "Nhà trai",
+                  theme: "groom",
+                  icon: "♢",
                   items: [
                     ["10:30", "Chuẩn bị", "Gia đình chuẩn bị tiệc và đón khách"],
                     ["12:00", "Đón khách", "Mời khách tới dự lễ và chụp hình"],
@@ -327,15 +536,20 @@ export default function WeddingInvitation() {
                 },
                 {
                   label: "Nhà gái",
+                  theme: "bride",
+                  icon: "♡",
                   items: [
                     ["09:30", "Chuẩn bị", "Trang trí nhà cửa và làm đẹp cho cô dâu"],
                     ["11:00", "Đón khách", "Tiếp đón người thân và bạn bè"],
                     ["14:30", "Gửi xe và đồng hành", "Gia đình hỗ trợ lễ nghi và di chuyển"],
                   ],
                 },
-              ].map(({ label, items }) => (
-                <div className="timeline-column reveal fade-up" data-reveal key={label}>
-                  <p className="timeline-label">{label}</p>
+              ].map(({ label, theme, icon, items }) => (
+                <div className={`timeline-column timeline-${theme} reveal fade-up`} data-reveal key={label}>
+                  <div className="timeline-heading">
+                    <span className="timeline-icon" aria-hidden="true">{icon}</span>
+                    <p className="timeline-label">{label}</p>
+                  </div>
                   <div className="timeline">
                     {items.map(([time, title, desc]) => (
                       <div className="timeline-item" key={`${label}-${time}`}>
@@ -352,50 +566,38 @@ export default function WeddingInvitation() {
             </div>
           </section>
 
-          <section className="section location-section reveal" data-reveal>
-            <p className="eyebrow">LOCATION</p>
-            <h2>Nhà trai & nhà gái</h2>
-            <div className="location-grid">
+          <section id="gallery" className="section gallery-section reveal" data-reveal>
+            <p className="eyebrow">OUR MEMORIES</p>
+            <h2>Moments</h2>
+            <div className="gallery">
               {[
-                {
-                  label: "Nhà trai",
-                  address: "123 Phố Hoàng Diệu, Ba Đình, Hà Nội",
-                  map: "https://www.google.com/maps?q=123+Ph%E1%BB%91+Ho%C3%A0ng+Di%E1%BB%87u+Ba+%C4%90%C3%ACnh+H%C3%A0+N%E1%BB%99i&output=embed",
-                },
-                {
-                  label: "Nhà gái",
-                  address: "456 Đường Trần Duy Hưng, Cầu Giấy, Hà Nội",
-                  map: "https://www.google.com/maps?q=456+%C4%90%C6%B0%E1%BB%9Dng+Tr%E1%BA%A7n+Duy+H%C6%B0ng+C%E1%BA%A7u+Gi%E1%BA%A5y+H%C3%A0+N%E1%BB%99i&output=embed",
-                },
-              ].map(({ label, address, map }) => (
-                <div className="location-card reveal fade-up" data-reveal key={label}>
-                  <div className="location-info">
-                    <span className="event-icon">⌖</span>
-                    <h3>{label}</h3>
-                    <p>{address}</p>
-                    <a
-                      className="text-link"
-                      href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}`}
-                      target="_blank"
-                      rel="noreferrer"
-                    >
-                      XEM BẢN ĐỒ →
-                    </a>
-                  </div>
-                  <iframe
-                    title={label}
-                    src={map}
-                    loading="lazy"
-                    referrerPolicy="no-referrer-when-downgrade"
-                  />
-                </div>
+                "photo-1511285560929-80b456fea0bc",
+                "photo-1529634806980-85c3dd6d34ac",
+                "photo-1523438885200-e635ba2c371e",
+                "photo-1519225421980-715cb0215aed",
+                "photo-1517841905240-472988babdf9",
+                "photo-1522673607200-164d1b6ce486",
+                "photo-1469371670807-013ccf25f16a",
+                "photo-1507504031003-b417219a0fde",
+                "photo-1504150558240-0b4fd8946624",
+                "photo-1544078751-58fee2d8a03b",
+                "photo-1520854221256-17451cc331bf",
+                "photo-1487412720507-e7ab37603c6f",
+              ].map((id, index) => (
+                <img
+                  key={id}
+                  className={`gallery-${index + 1} reveal fade-up`}
+                  data-reveal
+                  src={`https://images.unsplash.com/${id}?auto=format&fit=crop&w=900&q=85`}
+                  alt={`Wedding moment ${index + 1}`}
+                />
               ))}
             </div>
           </section>
 
           <section className="section blessing-section reveal" data-reveal>
             <p className="eyebrow">CONGRATULATIONS</p>
-            <h2>Ký tên chúc mừng</h2>
+            <h2>Give us a heart</h2>
 
             <div className="signature-editor reveal fade-up" data-reveal>
               <div className="signature-controls">
@@ -422,9 +624,36 @@ export default function WeddingInvitation() {
                       disabled={!signatureData}
                       onClick={() => setSigned(true)}
                     >
-                      ĐẶT CHỮ KÝ VÀO ẢNH
+                      HIỆN CHỮ KÝ
+                    </button>
+                    <button
+                      className="signature-position-button"
+                      type="button"
+                      disabled={!signed || !signatureData}
+                      onClick={saveSignature}
+                      aria-label="Lưu vị trí chữ ký"
+                      title="Lưu vị trí chữ ký"
+                    >
+                      ♡
                     </button>
                   </div>
+                  <label className="signature-size">
+                    <span>KÍCH THƯỚC CHỮ KÝ</span>
+                    <input
+                      type="range"
+                      min="0.5"
+                      max="1.5"
+                      step="0.05"
+                      value={signatureScale}
+                      onChange={(event) => setSignatureScale(Number(event.target.value))}
+                    />
+                    <strong>{Math.round(signatureScale * 100)}%</strong>
+                  </label>
+                  {savedSignatures.length > 0 && (
+                    <p className="saved-signature-count">
+                      Đã lưu {savedSignatures.length} chữ ký trên ảnh
+                    </p>
+                  )}
                 </div>
               </div>
 
@@ -435,17 +664,38 @@ export default function WeddingInvitation() {
                 onPointerUp={handlePointerUp}
                 onPointerLeave={handlePointerUp}
               >
-                <img
-                  src="https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=1200&q=90"
-                  alt="Couple frame"
-                />
+                <div className="heart-portrait">
+                  <img
+                    src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=900&q=90"
+                    alt="Cô dâu chú rể trong khung trái tim"
+                  />
+                </div>
+                {savedSignatures.map((signature) => (
+                  <img
+                    className="signature-sticker saved-signature"
+                    key={signature.id}
+                    src={signature.data}
+                    alt="Chữ ký đã lưu"
+                    data-signature-id={signature.id}
+                    style={{
+                      left: `${signature.x}px`,
+                      top: `${signature.y}px`,
+                      transform: `scale(${signature.scale})`,
+                    }}
+                    onPointerDown={handlePointerDown}
+                    onPointerUp={handlePointerUp}
+                  />
+                ))}
                 {signed && signatureData && (
                   <img
-                    ref={signatureRef}
                     className="signature-sticker"
                     src={signatureData}
                     alt="Chữ ký đã vẽ"
-                    style={{ left: `${signaturePosition.x}px`, top: `${signaturePosition.y}px` }}
+                    style={{
+                      left: `${signaturePosition.x}px`,
+                      top: `${signaturePosition.y}px`,
+                      transform: `scale(${signatureScale})`,
+                    }}
                     onPointerDown={handlePointerDown}
                     onPointerUp={handlePointerUp}
                   />
@@ -478,14 +728,14 @@ export default function WeddingInvitation() {
 
           <section className="section gift-section reveal" data-reveal>
             <p className="eyebrow">WEDDING GIFT</p>
-            <h2>Mừng cưới chú rể và cô dâu</h2>
+            <h2>Gửi một chút yêu thương tới vợ chồng mình nhé!</h2>
 
             {!showGiftReveal ? (
               <button
                 className="secondary-button reveal-button"
                 onClick={() => setShowGiftReveal(true)}
               >
-                MỪNG CƯỚI
+                GIVE A GIFT
               </button>
             ) : (
               <div className="gift-grid reveal fade-up" data-reveal>
@@ -535,31 +785,13 @@ export default function WeddingInvitation() {
             )}
           </section>
 
-          <section id="gallery" className="section gallery-section reveal" data-reveal>
-            <p className="eyebrow">OUR MEMORIES</p>
-            <h2>Moments</h2>
-            <div className="gallery">
-              {[
-                "photo-1511285560929-80b456fea0bc",
-                "photo-1460364157752-9267c1b7a7c8",
-                "photo-1523438885200-e635ba2c371e",
-                "photo-1519225421980-715cb0215aed",
-                "photo-1517841905240-472988babdf9",
-                "photo-1513278974582-3e6b8d3b3a6a",
-              ].map((id, index) => (
-                <img
-                  key={id}
-                  className={`gallery-${index + 1} reveal fade-up`}
-                  data-reveal
-                  src={`https://images.unsplash.com/${id}?auto=format&fit=crop&w=900&q=85`}
-                  alt={`Wedding moment ${index + 1}`}
-                />
-              ))}
-            </div>
-          </section>
-
           <section className="quote-section reveal" data-reveal>
-            <div>
+            <div
+              className="quote-content"
+              style={{
+                transform: `translate(calc(-50% + ${quotePosition.x}px), calc(-50% + ${quotePosition.y}px))`,
+              }}
+            >
               <span>“</span>
               <p>Two souls, one heart, one beautiful journey.</p>
               <small>— Hữu Tài & Hà Thủy —</small>
@@ -567,14 +799,21 @@ export default function WeddingInvitation() {
           </section>
 
           <section id="rsvp" className="section rsvp-section reveal" data-reveal>
-            <p className="eyebrow">RSVP</p>
-            <h2>Will you join us?</h2>
+            <p className="eyebrow">Yêu Thương</p>
+            <h2>Chung vui cùng chúng mình nhé?</h2>
             {sent ? (
               <div className="success">
                 <div>♡</div>
                 <h3>Cảm ơn bạn!</h3>
                 <p>Lời xác nhận của bạn đã được ghi nhận.</p>
-                <button onClick={() => setSent(false)} className="secondary-button">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRsvpError("");
+                    setSent(false);
+                  }}
+                  className="secondary-button"
+                >
                   GỬI LẠI
                 </button>
               </div>
@@ -586,21 +825,36 @@ export default function WeddingInvitation() {
                 </label>
                 <label>
                   Bạn có tham dự không?
-                  <select value={attendance} onChange={(e) => setAttendance(e.target.value)}>
+                  <select name="attendance" value={attendance} onChange={(e) => setAttendance(e.target.value)}>
                     <option value="yes">Có, mình sẽ tham dự ♡</option>
                     <option value="no">Rất tiếc, mình không thể tham dự</option>
                   </select>
                 </label>
                 <label>
                   Số người tham dự
-                  <input required min="1" max="20" type="number" defaultValue="1" />
+                  <input required name="guests" min="1" max="20" type="number" defaultValue="1" />
                 </label>
                 <label>
                   Lời nhắn
-                  <textarea rows={4} placeholder="Gửi lời chúc đến cô dâu chú rể..." />
+                  <textarea name="message" rows={4} placeholder="Gửi lời chúc đến cô dâu chú rể..." />
                 </label>
+                {rsvpError && <p className="rsvp-error">{rsvpError}</p>}
                 <button className="primary-button" type="submit">XÁC NHẬN</button>
               </form>
+            )}
+            {wishes.length > 0 && (
+              <div className="wish-wall">
+                <p className="wish-wall-title">LỜI CHÚC TỪ BẠN BÈ</p>
+                <div className="wish-list">
+                  {wishes.map((wish, index) => (
+                    <article className={`wish-card wish-color-${(index * 5 + 2) % 8}`} key={wish.id}>
+                      <span>“</span>
+                      <p>{wish.message || "Hẹn gặp hai bạn trong ngày đặc biệt!"}</p>
+                      <strong>{wish.name}</strong>
+                    </article>
+                  ))}
+                </div>
+              </div>
             )}
           </section>
 
