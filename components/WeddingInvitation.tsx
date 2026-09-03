@@ -492,8 +492,8 @@ export default function WeddingInvitation() {
             <div className="event-grid reveal fade-up" data-reveal>
               <div className="event-groom">
                 <span className="event-icon">♡</span>
-                <h3>Wedding Ceremony</h3>
-                <p>18:00 · Thứ Ba</p>
+                <h3>Lễ Thành Hôn tại Nhà Trai</h3>
+                <p>11:00 · Thứ Năm</p>
                 <p>15 tháng 10, 2026</p>
                 <iframe
                   className="ceremony-map"
@@ -505,9 +505,9 @@ export default function WeddingInvitation() {
               </div>
               <div className="event-bride">
                 <span className="event-icon">⌖</span>
-                <h3>ABC Wedding Center</h3>
-                <p>123 Phố Hoàng Diệu</p>
-                <p>Ba Đình, Hà Nội</p>
+                <h3>Lễ Thành Hôn tại Nhà Gái</h3>
+                <p>06:30 · Thứ Năm</p>
+                <p>15 tháng 10, 2026</p>
                 <iframe
                   className="ceremony-map"
                   title="Bản đồ nhà gái"
@@ -529,9 +529,11 @@ export default function WeddingInvitation() {
                   theme: "groom",
                   icon: "♢",
                   items: [
-                    ["10:30", "Chuẩn bị", "Gia đình chuẩn bị tiệc và đón khách"],
-                    ["12:00", "Đón khách", "Mời khách tới dự lễ và chụp hình"],
-                    ["15:30", "Sắp xếp nghi thức", "Ổn định sân khấu, âm thanh và lễ tân"],
+                    ["14/10 · 11:00", "Mời khách dùng tiệc", "Gia đình nhà trai đón tiếp người thân, bạn bè và mời khách dùng tiệc thân mật"],
+                    ["14/10 · 20:00", "Ca múa hát giao lưu", "Cùng gia đình, người thân và bạn bè vui chơi, ca múa hát trong buổi tối"],
+                    ["15/10 · 08:05", "Đón dâu về nhà trai", "Đoàn nhà trai đón cô dâu và cùng gia đình di chuyển về nhà trai"],
+                    ["15/10 · 11:00", "Lễ thành hôn", "Gia đình hai bên thực hiện nghi lễ, ra mắt và chúc phúc cho đôi trẻ"],
+                    ["15/10 · 12:30", "Tiệc mừng", "Đón khách, dùng tiệc và chung vui cùng gia đình, người thân, bạn bè đến hết buổi"],
                   ],
                 },
                 {
@@ -539,9 +541,11 @@ export default function WeddingInvitation() {
                   theme: "bride",
                   icon: "♡",
                   items: [
-                    ["09:30", "Chuẩn bị", "Trang trí nhà cửa và làm đẹp cho cô dâu"],
-                    ["11:00", "Đón khách", "Tiếp đón người thân và bạn bè"],
-                    ["14:30", "Gửi xe và đồng hành", "Gia đình hỗ trợ lễ nghi và di chuyển"],
+                    ["14/10 · 11:00", "Mời khách dùng tiệc", "Gia đình nhà gái đón tiếp người thân, bạn bè và mời khách dùng tiệc thân mật"],
+                    ["14/10 · 20:00", "Ca múa hát giao lưu", "Cùng gia đình, người thân và bạn bè vui chơi, ca múa hát trong buổi tối"],
+                    ["15/10 · 06:30", "Chuẩn bị lễ cưới", "Gia đình chuẩn bị lễ vật, không gian và cô dâu cho ngày vui"],
+                    ["15/10 · 07:30", "Lễ vu quy", "Gia đình làm lễ, dặn dò và trao gửi cô dâu về nhà chồng"],
+                    ["15/10 · 08:05", "Cô dâu về nhà trai", "Tiễn cô dâu cùng đoàn đưa dâu, bắt đầu hành trình về nhà trai"],
                   ],
                 },
               ].map(({ label, theme, icon, items }) => (
@@ -664,6 +668,14 @@ export default function WeddingInvitation() {
                 onPointerUp={handlePointerUp}
                 onPointerLeave={handlePointerUp}
               >
+                <div className="floral-border signature-floral-border" aria-hidden="true">
+                  <span className="floral-flower floral-flower-top">✿</span>
+                  <span className="floral-flower floral-flower-bottom">✿</span>
+                  <i className="floral-leaf floral-leaf-one" />
+                  <i className="floral-leaf floral-leaf-two" />
+                  <i className="floral-leaf floral-leaf-three" />
+                  <i className="floral-leaf floral-leaf-four" />
+                </div>
                 <div className="heart-portrait">
                   <img
                     src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=900&q=90"
@@ -707,18 +719,38 @@ export default function WeddingInvitation() {
             <div className="blessing-grid">
               {[
                 {
-                  role: "Gia đình nhà trai",
-                  text: "Trân trọng kính mời cùng chúc mừng hạnh phúc mới cho hai bên gia đình.",
-                  signature: "Ký tên: Gia đình nhà trai",
+                  role: "Lời cảm ơn từ chú rể",
+                  theme: "groom",
+                  image: "photo-1519741497674-611481863552",
+                  text: "Hữu Tài xin gửi lời cảm ơn chân thành đến gia đình, người thân và bạn bè đã luôn yêu thương, tin tưởng và đồng hành cùng chúng mình trong những chặng đường vừa qua. Sự hiện diện, sẻ chia và những lời chúc tốt đẹp của mọi người là món quà vô cùng ý nghĩa, giúp ngày vui của chúng mình trở nên trọn vẹn hơn.",
+                  signature: "Thương mến, Hữu Tài",
                 },
                 {
-                  role: "Gia đình nhà gái",
-                  text: "Xin gửi lời chúc mừng nồng nhiệt và những niềm vui trọn vẹn trong ngày cưới.",
-                  signature: "Ký tên: Gia đình nhà gái",
+                  role: "Lời cảm ơn từ cô dâu",
+                  theme: "bride",
+                  image: "photo-1520854221256-17451cc331bf",
+                  text: "Hà Thủy biết ơn gia đình, người thân và bạn bè đã dành cho chúng mình thật nhiều tình cảm trong ngày đặc biệt này. Cảm ơn mọi người đã luôn ở bên, lắng nghe, động viên và gửi những lời chúc ấm áp. Tình yêu thương ấy sẽ luôn là kỷ niệm đẹp mà chúng mình trân trọng trên hành trình phía trước.",
+                  signature: "Thương mến, Hà Thủy",
                 },
-              ].map(({ role, text, signature }) => (
-                <div className="blessing-card reveal fade-up" data-reveal key={role}>
-                  <p className="blessing-role">{role}</p>
+              ].map(({ role, theme, image, text, signature }) => (
+                <div className={`blessing-card blessing-${theme} reveal fade-up`} data-reveal key={role}>
+                  <div className="floral-border" aria-hidden="true">
+                    <span className="floral-flower floral-flower-top">✿</span>
+                    <span className="floral-flower floral-flower-bottom">✿</span>
+                    <i className="floral-leaf floral-leaf-one" />
+                    <i className="floral-leaf floral-leaf-two" />
+                    <i className="floral-leaf floral-leaf-three" />
+                    <i className="floral-leaf floral-leaf-four" />
+                  </div>
+                  <div className="blessing-heading">
+                    <div className="blessing-avatar">
+                      <img
+                        src={`https://images.unsplash.com/${image}?auto=format&fit=crop&w=240&q=85`}
+                        alt={theme === "groom" ? "Chú rể Hữu Tài" : "Cô dâu Hà Thủy"}
+                      />
+                    </div>
+                    <p className="blessing-role">{role}</p>
+                  </div>
                   <p className="blessing-text">{text}</p>
                   <div className="blessing-signature">{signature}</div>
                 </div>
@@ -862,11 +894,7 @@ export default function WeddingInvitation() {
             <p className="eyebrow">WITH LOVE</p>
             <h2>Hữu Tài & Hà Thủy</h2>
             <p>15 · 10 · 2026</p>
-            {musicError && <p className="music-error">Chưa tìm thấy file nhạc trong thư mục public/audio.</p>}
-            <p className="footer-note">
-              * Demo: RSVP hiện chỉ chạy ở phía trình duyệt. Có thể kết nối
-              Supabase/Vercel Postgres sau.
-            </p>
+            {musicError && <p className="music-error"></p>}
           </footer>
         </>
       )}

@@ -771,7 +771,7 @@ button, input, select, textarea { font: inherit; }
 .timeline-item {
   position: relative;
   display: grid;
-  grid-template-columns: 110px 1fr;
+  grid-template-columns: 142px 1fr;
   gap: 18px;
   padding: 20px 0;
   border-bottom: 1px solid var(--line);
@@ -783,7 +783,10 @@ button, input, select, textarea { font: inherit; }
   transform: translateX(4px);
 }
 .timeline-item:last-child { border-bottom: none; }
-.timeline-item time { font: 400 26px "Cormorant Garamond", serif; color: var(--timeline-color); }
+.timeline-item time {
+  font: 400 20px/1.1 "Cormorant Garamond", serif;
+  color: var(--timeline-color);
+}
 .timeline-item h3 { font: 500 24px "Cormorant Garamond", serif; margin: 0 0 5px; }
 .timeline-item p { margin: 0; color: var(--muted); font-size: 11px; }
 
@@ -968,12 +971,16 @@ button, input, select, textarea { font: inherit; }
 }
 
 .signature-canvas {
+  --floral-color: #d97992;
   position: relative;
   width: 100%;
   aspect-ratio: 16 / 10;
   overflow: hidden;
-  border: 1px solid rgba(85, 69, 51, 0.32);
-  background: #ffffff;
+  border: 4px solid transparent;
+  border-radius: 10px;
+  background:
+    linear-gradient(#ffffff, #ffffff) padding-box,
+    linear-gradient(120deg, #4f83b5, #e34c4c, #e2b93b, #d97992) border-box;
   box-shadow: 0 35px 80px rgba(55, 42, 31, 0.12);
 }
 .heart-portrait {
@@ -1045,18 +1052,114 @@ button, input, select, textarea { font: inherit; }
   margin-top: 50px;
 }
 .blessing-card {
-  border: 1px solid var(--line);
-  background: rgba(255,255,255,.55);
+  --blessing-color: #4f83b5;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(79, 131, 181, .35);
+  border-top: 4px solid #4f83b5;
+  background: rgba(79, 131, 181, .1);
   padding: 32px 24px;
   text-align: left;
+  clip-path: polygon(0 12px, 12px 0, 38% 0, 42% 7px, 72% 7px, 76% 0, calc(100% - 12px) 0, 100% 12px, 100% 78%, calc(100% - 10px) 82%, calc(100% - 10px) 100%, 62% 100%, 58% calc(100% - 7px), 28% calc(100% - 7px), 24% 100%, 10px 100%, 0 calc(100% - 12px));
+  filter: drop-shadow(0 12px 12px rgba(55, 42, 31, .1));
+  transition: transform .35s ease, filter .35s ease;
 }
+.blessing-card:hover {
+  transform: translateY(-6px);
+  filter: drop-shadow(0 18px 18px rgba(55, 42, 31, .16));
+}
+.blessing-bride {
+  --blessing-color: #d97992;
+  border-color: rgba(217, 121, 146, .38);
+  border-top-color: #d97992;
+  background: rgba(217, 121, 146, .1);
+}
+.blessing-card::before {
+  content: "";
+  position: absolute;
+  top: 10px;
+  right: 18px;
+  width: 72px;
+  height: 34px;
+  border-top: 1px solid var(--blessing-color);
+  border-radius: 50%;
+  opacity: .65;
+  transform: rotate(-18deg);
+}
+.blessing-card::after {
+  content: "❧";
+  position: absolute;
+  right: 18px;
+  bottom: 8px;
+  color: var(--blessing-color);
+  font: 30px/1 "Cormorant Garamond", serif;
+  opacity: .7;
+  transform: rotate(-12deg);
+}
+.floral-border {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  color: var(--blessing-color, var(--floral-color, var(--accent)));
+  pointer-events: none;
+}
+.floral-flower {
+  position: absolute;
+  font-size: 24px;
+  line-height: 1;
+  opacity: .75;
+  animation: flowerSway 4s ease-in-out infinite;
+}
+.floral-flower-top { top: 14px; left: 16px; }
+.floral-flower-bottom { right: 16px; bottom: 12px; animation-delay: 1.2s; }
+.floral-leaf {
+  position: absolute;
+  width: 18px;
+  height: 9px;
+  border: 1px solid currentColor;
+  border-radius: 100% 0 100% 0;
+  opacity: .65;
+  transform: rotate(-28deg);
+}
+.floral-leaf-one { top: 18px; left: 43px; }
+.floral-leaf-two { top: 34px; left: 30px; transform: rotate(28deg); }
+.floral-leaf-three { right: 42px; bottom: 19px; transform: rotate(152deg); }
+.floral-leaf-four { right: 29px; bottom: 35px; transform: rotate(208deg); }
+@keyframes flowerSway {
+  0%, 100% { transform: rotate(-4deg) scale(1); }
+  50% { transform: rotate(5deg) scale(1.08); }
+}
+.blessing-heading {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 18px;
+}
+.blessing-avatar {
+  width: 58px;
+  height: 58px;
+  flex: 0 0 auto;
+  overflow: hidden;
+  border: 3px solid #4f83b5;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 6px 14px rgba(55, 42, 31, .12);
+}
+.blessing-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+.blessing-bride .blessing-avatar { border-color: #d97992; }
 .blessing-role {
-  margin: 0 0 18px;
+  margin: 0;
   font-size: 10px;
   letter-spacing: .2em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: #4f83b5;
+  font-weight: 600;
 }
+.blessing-bride .blessing-role { color: #d97992; }
 .blessing-text {
   margin: 0;
   color: var(--ink);
@@ -1066,9 +1169,10 @@ button, input, select, textarea { font: inherit; }
 .blessing-signature {
   margin-top: 28px;
   font: 500 22px "Cormorant Garamond", serif;
-  color: var(--accent);
+  color: #4f83b5;
   letter-spacing: .03em;
 }
+.blessing-bride .blessing-signature { color: #d97992; }
 
 .gift-section {
   background: rgba(255,255,255,.38);
@@ -1375,7 +1479,7 @@ footer > p:not(.eyebrow):not(.footer-note) { letter-spacing: .2em; font-size: 10
   .quote-section p { font-size: 35px; }
   .timeline-grid, .location-grid, .blessing-grid, .gift-grid { grid-template-columns: 1fr; }
   .timeline-column { padding: 22px 16px 8px; }
-  .timeline-item { grid-template-columns: 85px 1fr; }
+  .timeline-item { grid-template-columns: 118px 1fr; }
   .signature-actions {
     flex-direction: column;
   }
