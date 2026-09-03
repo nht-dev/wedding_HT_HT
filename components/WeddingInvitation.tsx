@@ -12,6 +12,14 @@ const STORY_SLIDES = [
   "photo-1520854221256-17451cc331bf",
   "photo-1460364157752-9267c1b7a7c8",
 ];
+const FALLING_HEARTS = Array.from({ length: 16 }, (_, index) => ({
+  id: index,
+  left: `${(index * 23 + 5) % 97}%`,
+  delay: `${(index * 1.17) % 9}s`,
+  duration: `${10 + (index % 5)}s`,
+  size: `${0.72 + (index % 4) * 0.12}`,
+  opacity: `${0.34 + (index % 5) * 0.11}`,
+}));
 
 function StoryVisual({ background, label }: { background: string; label: string }) {
   return (
@@ -345,6 +353,26 @@ export default function WeddingInvitation() {
 
   return (
     <main>
+      <div className="heart-rain" aria-hidden="true">
+        {FALLING_HEARTS.map((heart) => (
+          <span
+            className="falling-heart"
+            key={heart.id}
+            style={
+              {
+                left: heart.left,
+                animationDelay: heart.delay,
+                animationDuration: heart.duration,
+                fontSize: `${heart.size}rem`,
+                "--heart-opacity": heart.opacity,
+              } as React.CSSProperties
+            }
+          >
+            <span className="heart-half heart-half-blue">T</span>
+            <span className="heart-half heart-half-pink">T</span>
+          </span>
+        ))}
+      </div>
       <audio ref={audioRef} src={MUSIC_SRC} loop preload="auto" />
       {!opened && (
         <section className="cover">

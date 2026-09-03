@@ -2,8 +2,11 @@ import { readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { NextResponse } from "next/server";
 
-const supabaseUrl = process.env.SUPABASE_URL;
-const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+const supabaseUrl =
+  process.env.SUPABASE_URL ?? process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey =
+  process.env.SUPABASE_SERVICE_ROLE_KEY ??
+  process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 const signaturesFile = path.join(process.cwd(), "data", "signatures.json");
 
 type Signature = {
@@ -41,7 +44,7 @@ async function writeLocalSignature(signature: Omit<Signature, "id">) {
 
 export async function GET() {
   if (!configured()) {
-    return NextResponse.json({ signatures: await readLocalSignatures(), configured: true });
+    return NextResponse.json({ signatures: await readLocalSignatures(), configured: false });
   }
 
   const response = await fetch(
