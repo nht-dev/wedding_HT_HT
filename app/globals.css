@@ -27,7 +27,7 @@ body {
   margin: 0;
   background:
     linear-gradient(rgba(248, 245, 239, 0.72), rgba(248, 245, 239, 0.72)),
-    url("https://images.unsplash.com/photo-1520854221256-17451cc331bf?auto=format&fit=crop&w=1800&q=90") center/cover fixed;
+    url("../public/pictures/HTH_0194.JPG") center/cover fixed;
   color: var(--ink);
   font-family: "Montserrat", sans-serif;
   font-weight: 300;
@@ -43,7 +43,7 @@ main::before {
   position: fixed;
   inset: 0;
   background: rgba(255, 255, 255, 0.12);
-  backdrop-filter: blur(2px);
+  backdrop-filter: blur(0px);
   z-index: -1;
 }
 .heart-rain {
@@ -157,7 +157,7 @@ button {
   place-items: center;
   isolation: isolate;
   background:
-    url("https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=1800&q=90")
+    url("../public/pictures/HTH_0305.JPG")
     center/cover;
   color: white;
 }
@@ -583,7 +583,7 @@ button {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: url("https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=2000&q=90") center/cover;
+  background: url("../public/pictures/HTH_9997.JPG") center/cover;
   filter: saturate(0.95) brightness(0.75);
 }
 .hero {
@@ -991,7 +991,7 @@ button {
 .event-grid > div + div { border-left: 1px solid var(--line); }
 .event-icon { font-size: 30px; }
 .event-grid h3 { font: 500 30px "Cormorant Garamond", serif; }
-.event-grid p { font-size: 12px; color: var(--muted); line-height: 1.8; }
+.event-grid p { font-size: 16px; color: var(--muted); line-height: 1.8; }
 .event-groom h3,
 .event-groom p { color: #4f83b5; }
 .event-bride h3,
@@ -1712,7 +1712,7 @@ button {
   min-height: 65vh;
   display: grid;
   place-items: center;
-  background: url("https://images.unsplash.com/photo-1511285560929-80b456fea0bc?auto=format&fit=crop&w=1800&q=90") center/cover fixed;
+  background: url("../public/pictures/HTH_0194.JPG?auto=format&fit=crop&w=1800&q=90") center/cover fixed;
   position: relative;
   color: white;
   text-align: center;
@@ -1879,9 +1879,8 @@ footer {
   text-align: center;
   padding: 126px 20px 72px;
   background:
-    linear-gradient(rgba(45, 42, 37, .94), rgba(45, 42, 37, .94)),
-    repeating-linear-gradient(135deg, rgba(255,255,255,.035) 0 1px, transparent 1px 14px),
-    #2d2a25;
+    linear-gradient(#3d3c3bf0, #10100ff0),
+    url("../public/pictures/HTH_0194.JPG") center/cover fixed;
   color: white;
 }
 footer::before {

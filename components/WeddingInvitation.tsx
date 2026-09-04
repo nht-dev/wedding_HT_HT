@@ -4,12 +4,47 @@ import { useEffect, useMemo, useRef, useState } from "react";
 
 const EVENT_DATE = new Date("2026-10-15T11:00:00+07:00").getTime();
 const SAVED_SIGNATURES_KEY = "wedding-saved-signatures";
+const GALARIES = [
+  "/pictures/slide1/HTH_0012.JPG",
+  "/pictures/slide1/HTH_0194.JPG",
+  "/pictures/slide1/HTH_0275.JPG",
+  "/pictures/slide1/HTH_0319.JPG",
+  "/pictures/slide2/HTH_9495.JPG",
+  "/pictures/slide2/HTH_9578.JPG",
+  "/pictures/slide2/HTH_9674.JPG",
+  "/pictures/slide2/HTH_9777.JPG",
+  "/pictures/slide2/HTH_9903.JPG",
+  "/pictures/slide2/HTH_9996.JPG",
+  "/pictures/slide3/HTH_0084.JPG",
+  "/pictures/slide3/HTH_0149.JPG",
+  "/pictures/slide3/HTH_0224.JPG",
+  "/pictures/slide3/HTH_0415.JPG",
+  "/pictures/slide3/HTH_0501.JPG",
+  "/pictures/slide3/HTH_9553.JPG",
+];
 const STORY_SLIDES = [
-  "photo-1519741497674-611481863552",
-  "photo-1519225421980-715cb0215aed",
-  "photo-1511285560929-80b456fea0bc",
-  "photo-1520854221256-17451cc331bf",
-  "photo-1460364157752-9267c1b7a7c8",
+  "/pictures/slide1/HTH_0012.JPG",
+  "/pictures/slide1/HTH_0194.JPG",
+  "/pictures/slide1/HTH_0275.JPG",
+  "/pictures/slide1/HTH_0319.JPG",
+  "/pictures/slide1/HTH_0501.JPG",
+];
+const STORY_SLIDES1 = [
+  "/pictures/slide2/HTH_9495.JPG",
+  "/pictures/slide2/HTH_9578.JPG",
+  "/pictures/slide2/HTH_9674.JPG",
+  "/pictures/slide2/HTH_9777.JPG",
+  "/pictures/slide2/HTH_9903.JPG",
+  "/pictures/slide2/HTH_9996.JPG",
+];
+const STORY_SLIDES2 = [
+  "/pictures/slide3/HTH_0084.JPG",
+  "/pictures/slide3/HTH_0149.JPG",
+  "/pictures/slide3/HTH_0224.JPG",
+  "/pictures/slide3/HTH_0415.JPG",
+  "/pictures/slide3/HTH_0501.JPG",
+  "/pictures/slide3/HTH_9553.JPG",
+  "/pictures/slide3/HTH_9674.JPG",
 ];
 const FALLING_HEARTS = Array.from({ length: 10 }, (_, index) => ({
   id: index,
@@ -20,20 +55,31 @@ const FALLING_HEARTS = Array.from({ length: 10 }, (_, index) => ({
   opacity: `${0.34 + (index % 5) * 0.11}`,
 }));
 
-function StoryVisual({ background, label }: { background: string; label: string }) {
+type StoryVisualProps = {
+  background: string;
+  label: string;
+  slides: string[];
+};
+
+function StoryVisual({
+  background,
+  label,
+  slides,
+}: StoryVisualProps) {
   return (
     <div className="story-visual" aria-label={label}>
       <img
         className="story-photo-background"
-        src={`https://images.unsplash.com/${background}?auto=format&fit=crop&w=1000&q=85`}
+        src={background}
         alt={label}
       />
+
       <div className="story-slides">
-        {STORY_SLIDES.map((id, index) => (
+        {slides.map((src, index) => (
           <img
             className={`story-slide story-slide-${index + 1}`}
-            key={id}
-            src={`https://images.unsplash.com/${id}?auto=format&fit=crop&w=700&q=85`}
+            key={`${src}-${index}`}
+            src={src}
             alt={`Khoảnh khắc cưới ${index + 1}`}
           />
         ))}
@@ -242,7 +288,7 @@ export default function WeddingInvitation() {
     const audio = audioRef.current;
     if (!audio) return;
 
-    audio.volume = 0.4;
+    audio.volume = 0.8;
     if (music) {
       audio.play().catch(() => setMusicError(true));
     } else {
@@ -504,7 +550,7 @@ export default function WeddingInvitation() {
                 const selectedTrack = chooseNextTrack("");
                 const audio = audioRef.current;
                 if (audio) {
-                  audio.volume = 0.4;
+                  audio.volume = 1;
                   audio.currentTime = 0;
                   startTrack(selectedTrack);
                   setMusic(true);
@@ -582,8 +628,9 @@ export default function WeddingInvitation() {
               <div className="story-grid reveal fade-up" data-reveal>
                 <article className="story-entry story-entry-left">
                   <StoryVisual
-                    background="photo-1519741497674-611481863552"
-                    label="Cô dâu và chú rể"
+                    background="/pictures/HTH_0305.JPG"
+                    label="Câu chuyện của chúng mình"
+                    slides={STORY_SLIDES}
                   />
                   <div className="story-note">
                     <span>15 / 10 / 2026</span>
@@ -598,8 +645,9 @@ export default function WeddingInvitation() {
                     <p>Những khoảnh khắc giản dị đã viết nên câu chuyện riêng của hai chúng mình.</p>
                   </div>
                   <StoryVisual
-                    background="photo-1511285560929-80b456fea0bc"
-                    label="Khoảnh khắc đầu tiên của đôi uyên ương"
+                    background="/pictures/HTH_0194.JPG"
+                    label="Câu chuyện của chúng mình"
+                    slides={STORY_SLIDES1}
                   />
                 </article>
                 <article className="story-entry story-entry-center">
@@ -608,8 +656,9 @@ export default function WeddingInvitation() {
                     <p className="promise-text">Mỗi ngày bên nhau là một trang mới.</p>
                   </div>
                   <StoryVisual
-                    background="photo-1520854221256-17451cc331bf"
-                    label="Khoảnh khắc hạnh phúc của cô dâu chú rể"
+                    background="/pictures/HTH_9997.JPG"
+                    label="Câu chuyện của chúng mình"
+                    slides={STORY_SLIDES2}
                   />
                   <div className="story-note">
                     <span>FOREVER STARTS HERE</span>
@@ -717,25 +766,12 @@ export default function WeddingInvitation() {
             <p className="eyebrow">OUR MEMORIES</p>
             <h2>Moments</h2>
             <div className="gallery">
-              {[
-                "photo-1511285560929-80b456fea0bc",
-                "photo-1529634806980-85c3dd6d34ac",
-                "photo-1523438885200-e635ba2c371e",
-                "photo-1519225421980-715cb0215aed",
-                "photo-1517841905240-472988babdf9",
-                "photo-1522673607200-164d1b6ce486",
-                "photo-1469371670807-013ccf25f16a",
-                "photo-1507504031003-b417219a0fde",
-                "photo-1504150558240-0b4fd8946624",
-                "photo-1544078751-58fee2d8a03b",
-                "photo-1520854221256-17451cc331bf",
-                "photo-1487412720507-e7ab37603c6f",
-              ].map((id, index) => (
+              {GALARIES.map((src, index) => (
                 <img
-                  key={id}
+                  key={`${src}-${index}`}
                   className={`gallery-${index + 1} reveal fade-up`}
                   data-reveal
-                  src={`https://images.unsplash.com/${id}?auto=format&fit=crop&w=900&q=85`}
+                  src={src}
                   alt={`Wedding moment ${index + 1}`}
                 />
               ))}
@@ -821,8 +857,14 @@ export default function WeddingInvitation() {
                 </div>
                 <div className="heart-portrait">
                   <img
-                    src="https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=900&q=90"
                     alt="Cô dâu chú rể trong khung trái tim"
+                    src="/pictures/HTH_0305.JPG?auto=format&fit=crop&w=900&q=90"
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      objectFit: "cover",
+                      objectPosition: "right center",
+                    }}
                   />
                 </div>
                 {savedSignatures.map((signature) => (
@@ -864,14 +906,14 @@ export default function WeddingInvitation() {
                 {
                   role: "Lời cảm ơn từ chú rể",
                   theme: "groom",
-                  image: "photo-1519741497674-611481863552",
+                  image: "/pictures/alone/HTH_9861.JPG",
                   text: "Hữu Tài xin gửi lời cảm ơn chân thành đến gia đình, người thân và bạn bè đã luôn yêu thương, tin tưởng và đồng hành cùng chúng mình trong những chặng đường vừa qua. Sự hiện diện, sẻ chia và những lời chúc tốt đẹp của mọi người là món quà vô cùng ý nghĩa, giúp ngày vui của chúng mình trở nên trọn vẹn hơn.",
                   signature: "Thương mến, Hữu Tài",
                 },
                 {
                   role: "Lời cảm ơn từ cô dâu",
                   theme: "bride",
-                  image: "photo-1520854221256-17451cc331bf",
+                  image: "/pictures/alone/HTH_0224.JPG",
                   text: "Hà Thủy biết ơn gia đình, người thân và bạn bè đã dành cho chúng mình thật nhiều tình cảm trong ngày đặc biệt này. Cảm ơn mọi người đã luôn ở bên, lắng nghe, động viên và gửi những lời chúc ấm áp. Tình yêu thương ấy sẽ luôn là kỷ niệm đẹp mà chúng mình trân trọng trên hành trình phía trước.",
                   signature: "Thương mến, Hà Thủy",
                 },
@@ -888,7 +930,7 @@ export default function WeddingInvitation() {
                   <div className="blessing-heading">
                     <div className="blessing-avatar">
                       <img
-                        src={`https://images.unsplash.com/${image}?auto=format&fit=crop&w=240&q=85`}
+                        src={image + `?auto=format&fit=crop&w=240&q=85`}
                         alt={theme === "groom" ? "Chú rể Hữu Tài" : "Cô dâu Hà Thủy"}
                       />
                     </div>
@@ -926,15 +968,15 @@ export default function WeddingInvitation() {
                   {
                     name: "Chú rể",
                     person: "Hữu Tài",
-                    bank: "Vietcombank",
-                    account: "1234567890",
+                    bank: "TP Bank",
+                    account: "84688688868",
                     holder: "NGUYỄN HỮU TÀI",
                     qr: "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=VCB%201234567890%20NGUYEN%20HUU%20TAI",
                   },
                   {
                     name: "Cô dâu",
                     person: "Hà Thủy",
-                    bank: "Techcombank",
+                    bank: "TP Bank",
                     account: "0987654321",
                     holder: "HÀ THỊ THỦY",
                     qr: "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=TCB%200987654321%20TRAN%20THI%20HA%20THUY",
