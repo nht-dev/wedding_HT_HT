@@ -3,7 +3,6 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 
 const EVENT_DATE = new Date("2026-10-15T11:00:00+07:00").getTime();
-const MUSIC_SRC = "/audio/vay-cuoi.mp3";
 const SAVED_SIGNATURES_KEY = "wedding-saved-signatures";
 const STORY_SLIDES = [
   "photo-1519741497674-611481863552",
@@ -84,6 +83,7 @@ export default function WeddingInvitation() {
   const [quotePosition, setQuotePosition] = useState({ x: 0, y: 0 });
   const [music, setMusic] = useState(true);
   const [musicError, setMusicError] = useState(false);
+  const [musicPlaylist, setMusicPlaylist] = useState<string[]>([]);
   const [attendance, setAttendance] = useState("yes");
   const [sent, setSent] = useState(false);
   const [rsvpError, setRsvpError] = useState("");
@@ -108,6 +108,7 @@ export default function WeddingInvitation() {
   const [showGiftReveal, setShowGiftReveal] = useState(false);
   const [giftAnimating, setGiftAnimating] = useState(false);
   const [savedSignaturesLoaded, setSavedSignaturesLoaded] = useState(false);
+  const [currentTrack, setCurrentTrack] = useState("");
   const heartRainRef = useRef<HTMLDivElement | null>(null);
   const boardRef = useRef<HTMLDivElement | null>(null);
   const signaturePadRef = useRef<HTMLCanvasElement | null>(null);
@@ -116,6 +117,21 @@ export default function WeddingInvitation() {
   const isDraggingRef = useRef(false);
   const isDrawingRef = useRef(false);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const currentTrackRef = useRef(currentTrack);
+
+  useEffect(() => {
+    fetch("/api/audio")
+      .then((response) => response.ok ? response.json() : null)
+      .then((result) => {
+        const tracks = Array.isArray(result?.tracks) ? result.tracks : [];
+        setMusicPlaylist(tracks);
+        if (tracks[0]) {
+          currentTrackRef.current = tracks[0];
+          setCurrentTrack(tracks[0]);
+        }
+      })
+      .catch(() => undefined);
+  }, []);
 
   useEffect(() => {
     const timer = window.setInterval(() => setNow(Date.now()), 1000);
@@ -199,6 +215,29 @@ export default function WeddingInvitation() {
       .catch(() => undefined);
   }, []);
 
+  const chooseNextTrack = (trackToAvoid = currentTrackRef.current) => {
+    const availableTracks = musicPlaylist.filter((track) => track !== trackToAvoid);
+    const nextTrack = availableTracks[Math.floor(Math.random() * availableTracks.length)] ?? musicPlaylist[0] ?? "";
+    currentTrackRef.current = nextTrack;
+    setCurrentTrack(nextTrack);
+    return nextTrack;
+  };
+
+  const startTrack = (track: string) => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    audio.src = track;
+    audio.currentTime = 0;
+    audio.load();
+    audio.play().catch(() => setMusicError(true));
+  };
+
+  const playNextTrack = () => {
+    const nextTrack = chooseNextTrack();
+    startTrack(nextTrack);
+  };
+
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
@@ -209,7 +248,7 @@ export default function WeddingInvitation() {
     } else {
       audio.pause();
     }
-  }, [music, opened]);
+  }, [music, opened, currentTrack]);
 
   useEffect(() => {
     const revealItems = document.querySelectorAll("[data-reveal]");
@@ -437,7 +476,7 @@ export default function WeddingInvitation() {
           </span>
         ))}
       </div>
-      <audio ref={audioRef} src={MUSIC_SRC} loop preload="auto" />
+      <audio ref={audioRef} src={currentTrack || undefined} onEnded={playNextTrack} preload="auto" />
       {!opened && (
         <section className={`cover${opening ? " is-opening" : ""}`}>
           <div className="cover-overlay" />
@@ -462,20 +501,20 @@ export default function WeddingInvitation() {
               onClick={() => {
                 if (opening) return;
                 setOpening(true);
+                const selectedTrack = chooseNextTrack("");
                 const audio = audioRef.current;
                 if (audio) {
                   audio.volume = 0.4;
                   audio.currentTime = 0;
-                  audio.play()
-                    .then(() => setMusic(true))
-                    .catch(() => setMusicError(true));
+                  startTrack(selectedTrack);
+                  setMusic(true);
                 }
                 window.setTimeout(() => setOpened(true), 900);
               }}
             >
-              <span>T</span>
-              <i>&amp;</i>
-              <span>T</span>
+              <span>Mở</span>
+              <i>❤️</i>
+              <span>Thiệp</span>
             </button>
             <p className="hint cover-hint">Một lời mời nhỏ, một ngày thật đặc biệt. Hãy cùng chúng mình lưu giữ khoảnh khắc đáng nhớ.</p>
           </div>
@@ -933,7 +972,7 @@ export default function WeddingInvitation() {
             <div
               className="quote-content"
               style={{
-                transform: `translate(calc(-50% + ${quotePosition.x}px), calc(-50% + ${quotePosition.y}px))`,
+                transform: `translate(calc(-40% + ${quotePosition.x}px), calc(-40% + ${quotePosition.y}px))`,
               }}
             >
               <span className="quote-mark quote-mark-open">“</span>

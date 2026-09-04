@@ -232,11 +232,11 @@ button {
 }
 .fold-panel-left > span {
   color: #4f83b5;
-  font: 400 clamp(28px, 3.6vw, 46px)/.82 "DucThuyThuPhap", "VL Thillends", serif;
+  font: 500 clamp(50px, 3.5vw, 60px)/.82 "DucThuyThuPhap", "VL Thillends", serif;
 }
 .fold-panel-right > span {
   color: #d97992;
-  font: 400 clamp(21px, 2.8vw, 35px)/.82 "SVN-Egregio Script", "Great Vibes", cursive;
+  font: 500 clamp(50px, 3.5vw, 60px)/.82 "DucThuyThuPhap", "VL Thillends", serif;
 }
 .fold-panel-right > span { transform: translateY(-50%) rotate(90deg); }
 .fold-panel-center {
@@ -339,10 +339,11 @@ button {
 .cover .cover-hint {
   max-width: 100%;
   margin-top: 18px;
-  color: rgba(23, 21, 18, .72);
+  color: rgba(23, 21, 18, .90);
   font-size: 10px;
   line-height: 1.55;
   text-wrap: balance;
+  font: 400 clamp(12px, 2.8vw, 14px)/.90 "SVN-Egregio Script", "Great Vibes", cursive;
 }
 .cover-open-button {
   gap: 9px;
@@ -351,6 +352,9 @@ button {
   font: 500 24px/1 "Cormorant Garamond", serif;
   letter-spacing: .12em;
   text-indent: .12em;
+}
+.cover-open-button > span, i {
+  font: 600 clamp(12px, 2.8vw, 14px)/.90 "SVN-Egregio Script", "Great Vibes", cursive;
 }
 .cover-open-button > span,
 .cover-open-button > i {
@@ -1718,14 +1722,14 @@ button {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: min(650px, calc(100% - 40px));
+  width: min(650px, calc(100% - 60px));
   padding: 48px 42px 30px;
   transition: transform 2.8s cubic-bezier(.2,.8,.2,1);
 }
 .quote-mark {
   position: absolute;
   color: #f3c9bf;
-  font: 90px/.4 "Cormorant Garamond", serif;
+  font: 40px/.4 "Cormorant Garamond", serif;
 }
 .quote-mark-open {
   top: 28px;
@@ -1737,7 +1741,7 @@ button {
 }
 .quote-section p {
   margin: 0 0 24px;
-  font: 400 58px/1.05 "Cormorant Garamond", serif;
+  font: 400 30px/1.05 "Cormorant Garamond", serif;
 }
 .quote-signature {
   color: #fff1dc;
@@ -2079,10 +2083,10 @@ footer > p:nth-of-type(2) {
   .gallery-3 { grid-column: span 2; }
   .quote-section { min-height: 55vh; background-attachment: scroll; }
   .quote-content { padding: 42px 24px 24px; }
-  .quote-mark-open { top: 25px; left: 4px; }
-  .quote-mark-close { right: 4px; bottom: 25px; }
-  .quote-section p { font-size: 42px; }
-  .quote-signature { font-size: 10px; }
+  .quote-mark-open { top: 45px; left: 15px; }
+  .quote-mark-close { right: 15px; bottom: 65px; }
+  .quote-section p { font-size: 20px; }
+  .quote-signature { font-size: 14px; }
   .timeline-grid, .location-grid, .blessing-grid, .gift-grid { grid-template-columns: 1fr; }
   .timeline-column { padding: 22px 16px 8px; }
   .timeline-item { grid-template-columns: 118px 1fr; }
