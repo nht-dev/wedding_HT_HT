@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  reactStrictMode: true
+  reactStrictMode: true,
+  images: {
+    qualities: [45],
+  },
 };
 
 export default nextConfig;

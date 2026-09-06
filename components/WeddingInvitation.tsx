@@ -1,51 +1,12 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import Image from "next/image";
 
 const EVENT_DATE = new Date("2026-10-15T11:00:00+07:00").getTime();
 const SAVED_SIGNATURES_KEY = "wedding-saved-signatures";
-const GALARIES = [
-  "/pictures/slide1/HTH_0012.JPG",
-  "/pictures/slide1/HTH_0194.JPG",
-  "/pictures/slide1/HTH_0275.JPG",
-  "/pictures/slide1/HTH_0319.JPG",
-  "/pictures/slide2/HTH_9495.JPG",
-  "/pictures/slide2/HTH_9578.JPG",
-  "/pictures/slide2/HTH_9674.JPG",
-  "/pictures/slide2/HTH_9777.JPG",
-  "/pictures/slide2/HTH_9903.JPG",
-  "/pictures/slide2/HTH_9996.JPG",
-  "/pictures/slide3/HTH_0084.JPG",
-  "/pictures/slide3/HTH_0149.JPG",
-  "/pictures/slide3/HTH_0224.JPG",
-  "/pictures/slide3/HTH_0415.JPG",
-  "/pictures/slide3/HTH_0501.JPG",
-  "/pictures/slide3/HTH_9553.JPG",
-];
-const STORY_SLIDES = [
-  "/pictures/slide1/HTH_0012.JPG",
-  "/pictures/slide1/HTH_0194.JPG",
-  "/pictures/slide1/HTH_0275.JPG",
-  "/pictures/slide1/HTH_0319.JPG",
-  "/pictures/slide1/HTH_0501.JPG",
-];
-const STORY_SLIDES1 = [
-  "/pictures/slide2/HTH_9495.JPG",
-  "/pictures/slide2/HTH_9578.JPG",
-  "/pictures/slide2/HTH_9674.JPG",
-  "/pictures/slide2/HTH_9777.JPG",
-  "/pictures/slide2/HTH_9903.JPG",
-  "/pictures/slide2/HTH_9996.JPG",
-];
-const STORY_SLIDES2 = [
-  "/pictures/slide3/HTH_0084.JPG",
-  "/pictures/slide3/HTH_0149.JPG",
-  "/pictures/slide3/HTH_0224.JPG",
-  "/pictures/slide3/HTH_0415.JPG",
-  "/pictures/slide3/HTH_0501.JPG",
-  "/pictures/slide3/HTH_9553.JPG",
-  "/pictures/slide3/HTH_9674.JPG",
-];
+const GROOM_MAP_URL = "https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d933.0468070926343!2d105.4565710965466!3d19.97122584026793!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e1!3m2!1sen!2s!4v1788414900773!5m2!1sen!2s";
+const BRIDE_MAP_URL = "https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d658.8001155960343!2d104.86627166744569!3d20.20024267734962!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e1!3m2!1sen!2s!4v1788414966559!5m2!1sen!2s";
 const FALLING_HEARTS = Array.from({ length: 10 }, (_, index) => ({
   id: index,
   left: `${(index * 23 + 5) % 97}%`,
@@ -66,24 +27,164 @@ function StoryVisual({
   label,
   slides,
 }: StoryVisualProps) {
+  const [activeSlide, setActiveSlide] = useState(0);
+  const swipeStartRef = useRef<{ id: number; x: number } | null>(null);
+  const currentSlide = slides[activeSlide] ?? slides[0];
+
+  useEffect(() => {
+    setActiveSlide((current) => Math.min(current, Math.max(slides.length - 1, 0)));
+  }, [slides.length]);
+
+  const changeSlide = (direction: 1 | -1) => {
+    if (slides.length < 2) return;
+    setActiveSlide((current) => (current + direction + slides.length) % slides.length);
+  };
+
+  const handleSwipeStart = (event: React.PointerEvent<HTMLDivElement>) => {
+    swipeStartRef.current = { id: event.pointerId, x: event.clientX };
+    event.currentTarget.setPointerCapture(event.pointerId);
+  };
+
+  const handleSwipeEnd = (event: React.PointerEvent<HTMLDivElement>) => {
+    const swipeStart = swipeStartRef.current;
+    if (!swipeStart || swipeStart.id !== event.pointerId) return;
+
+    swipeStartRef.current = null;
+    event.currentTarget.releasePointerCapture(event.pointerId);
+    const distance = event.clientX - swipeStart.x;
+    if (Math.abs(distance) < 40 || slides.length < 2) return;
+
+    changeSlide(distance < 0 ? 1 : -1);
+  };
+
   return (
-    <div className="story-visual" aria-label={label}>
-      <img
+    <div
+      className="story-visual"
+      aria-label={label}
+      onPointerDown={handleSwipeStart}
+      onPointerUp={handleSwipeEnd}
+      onPointerCancel={() => { swipeStartRef.current = null; }}
+    >
+      <Image
         className="story-photo-background"
         src={background}
         alt={label}
+        width={1200}
+        height={1200}
+        quality={45}
       />
 
       <div className="story-slides">
-        {slides.map((src, index) => (
-          <img
-            className={`story-slide story-slide-${index + 1}`}
-            key={`${src}-${index}`}
-            src={src}
-            alt={`Khoảnh khắc cưới ${index + 1}`}
+        {currentSlide && (
+          <Image
+            className="story-slide story-slide-current"
+            key={currentSlide}
+            src={currentSlide}
+            alt={`Khoảnh khắc cưới ${activeSlide + 1}`}
+            width={800}
+            height={800}
+            quality={45}
           />
-        ))}
+        )}
       </div>
+      {slides.length > 1 && (
+        <div className="story-controls">
+          <button
+            type="button"
+            className="story-control story-control-previous"
+            aria-label="Ảnh trước"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={() => changeSlide(-1)}
+          >
+            ←
+          </button>
+          <button
+            type="button"
+            className="story-control story-control-next"
+            aria-label="Ảnh tiếp theo"
+            onPointerDown={(event) => event.stopPropagation()}
+            onClick={() => changeSlide(1)}
+          >
+            →
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GalleryCarousel({ images }: { images: string[] }) {
+  const [activeImage, setActiveImage] = useState(0);
+  const [isVisible, setIsVisible] = useState(false);
+  const galleryRef = useRef<HTMLDivElement | null>(null);
+  const currentImage = images[activeImage] ?? images[0];
+
+  useEffect(() => {
+    setActiveImage((current) => Math.min(current, Math.max(images.length - 1, 0)));
+  }, [images.length]);
+
+  useEffect(() => {
+    const gallery = galleryRef.current;
+    if (!gallery) return;
+
+    const observer = new IntersectionObserver(
+      ([entry]) => setIsVisible(entry.isIntersecting),
+      { threshold: 0.2 }
+    );
+    observer.observe(gallery);
+    return () => observer.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (!isVisible || images.length < 2) return;
+    const timer = window.setInterval(() => {
+      setActiveImage((current) => (current + 1) % images.length);
+    }, 10000);
+    return () => window.clearInterval(timer);
+  }, [images.length, isVisible]);
+
+  const changeImage = (direction: 1 | -1) => {
+    if (images.length < 2) return;
+    setActiveImage((current) => (current + direction + images.length) % images.length);
+  };
+
+  if (!currentImage) return null;
+
+  return (
+    <div className="gallery" ref={galleryRef}>
+      <Image
+        className="gallery-carousel-image"
+        key={currentImage}
+        src={currentImage}
+        alt={`Wedding moment ${activeImage + 1}`}
+        width={1200}
+        height={900}
+        quality={45}
+        loading="lazy"
+      />
+      {images.length > 1 && (
+        <>
+          <button
+            type="button"
+            className="gallery-control gallery-control-previous"
+            aria-label="Ảnh trước"
+            onClick={() => changeImage(-1)}
+          >
+            ←
+          </button>
+          <button
+            type="button"
+            className="gallery-control gallery-control-next"
+            aria-label="Ảnh tiếp theo"
+            onClick={() => changeImage(1)}
+          >
+            →
+          </button>
+          <p className="gallery-count" aria-live="polite">
+            {activeImage + 1} / {images.length}
+          </p>
+        </>
+      )}
     </div>
   );
 }
@@ -96,18 +197,32 @@ function TimelineCard({
   item,
   theme,
   image,
+  mapSrc,
+  mapTitle,
 }: {
   item: string[] | null;
   theme: "groom" | "bride";
   image?: string;
+  mapSrc?: string;
+  mapTitle?: string;
 }) {
   if (!item) {
     return (
       <article className={`timeline-card timeline-card-${theme} timeline-card-empty`}>
-        <img
-          src={image ?? "https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=700&q=82"}
-          alt="Khoảnh khắc chuẩn bị ngày cưới"
-        />
+        {mapSrc ? (
+          <iframe
+            className="timeline-map"
+            title={mapTitle ?? "Bản đồ địa điểm tổ chức"}
+            src={mapSrc}
+            loading="lazy"
+            referrerPolicy="no-referrer-when-downgrade"
+          />
+        ) : (
+          <img
+            src={image ?? "https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=700&q=82"}
+            alt="Khoảnh khắc chuẩn bị ngày cưới"
+          />
+        )}
       </article>
     );
   }
@@ -125,11 +240,13 @@ function TimelineCard({
 export default function WeddingInvitation() {
   const [opened, setOpened] = useState(false);
   const [opening, setOpening] = useState(false);
+  const [navOpen, setNavOpen] = useState(false);
   const [now, setNow] = useState(Date.now());
-  const [quotePosition, setQuotePosition] = useState({ x: 0, y: 0 });
   const [music, setMusic] = useState(true);
   const [musicError, setMusicError] = useState(false);
   const [musicPlaylist, setMusicPlaylist] = useState<string[]>([]);
+  const [storySlides, setStorySlides] = useState<string[][]>([[], [], []]);
+  const galleries = useMemo(() => storySlides.flat(), [storySlides]);
   const [attendance, setAttendance] = useState("yes");
   const [sent, setSent] = useState(false);
   const [rsvpError, setRsvpError] = useState("");
@@ -180,17 +297,20 @@ export default function WeddingInvitation() {
   }, []);
 
   useEffect(() => {
-    const timer = window.setInterval(() => setNow(Date.now()), 1000);
-    return () => window.clearInterval(timer);
+    fetch("/api/story-slides")
+      .then((response) => response.ok ? response.json() : null)
+      .then((result) => {
+        if (Array.isArray(result?.slides)) {
+          setStorySlides(result.slides.map((slides: unknown) =>
+            Array.isArray(slides) ? slides.filter((slide): slide is string => typeof slide === "string") : []
+          ));
+        }
+      })
+      .catch(() => undefined);
   }, []);
 
   useEffect(() => {
-    const timer = window.setInterval(() => {
-      setQuotePosition({
-        x: Math.round((Math.random() - 0.5) * 120),
-        y: Math.round((Math.random() - 0.5) * 70),
-      });
-    }, 3600);
+    const timer = window.setInterval(() => setNow(Date.now()), 1000);
     return () => window.clearInterval(timer);
   }, []);
 
@@ -569,20 +689,31 @@ export default function WeddingInvitation() {
 
       {opened && (
         <>
-          <nav className="nav">
+          <nav className={`nav${navOpen ? " is-open" : ""}`}>
             <div className="couple-mark" aria-label="Hữu Tài và Hà Thủy">
               <span className="couple-mark-groom">Hữu Tài</span>
               <span className="couple-mark-join">&amp;</span>
               <span className="couple-mark-bride">Hà Thủy</span>
             </div>
-            <div>
-              <a href="#story">Câu Chuyện Chúng Tôi</a>
-              <a href="#event">The Wedding</a>
-              <a href="#timeline">Timeline</a>
-              <a href="#gallery">Thư Viện</a>
-              <a href="#blessing">Kỷ Niệm</a>
-              <a href="#gift">Gift</a>
-              <a href="#rsvp">Tham dự?</a>
+            <button
+              type="button"
+              className="nav-toggle"
+              aria-label={navOpen ? "Đóng menu" : "Mở menu"}
+              aria-expanded={navOpen}
+              onClick={() => setNavOpen((current) => !current)}
+            >
+              <span />
+              <span />
+              <span />
+            </button>
+            <div className="nav-links">
+              <a href="#story" onClick={() => setNavOpen(false)}>Câu Chuyện Chúng Tôi</a>
+              <a href="#event" onClick={() => setNavOpen(false)}>The Wedding</a>
+              <a href="#timeline" onClick={() => setNavOpen(false)}>Timeline</a>
+              <a href="#gallery" onClick={() => setNavOpen(false)}>Thư Viện</a>
+              <a href="#blessing" onClick={() => setNavOpen(false)}>Kỷ Niệm</a>
+              <a href="#gift" onClick={() => setNavOpen(false)}>Gift</a>
+              <a href="#rsvp" onClick={() => setNavOpen(false)}>Tham dự?</a>
             </div>
           </nav>
 
@@ -630,7 +761,7 @@ export default function WeddingInvitation() {
                   <StoryVisual
                     background="/pictures/HTH_0305.JPG"
                     label="Câu chuyện của chúng mình"
-                    slides={STORY_SLIDES}
+                    slides={storySlides[0]}
                   />
                   <div className="story-note">
                     <span>15 / 10 / 2026</span>
@@ -647,7 +778,7 @@ export default function WeddingInvitation() {
                   <StoryVisual
                     background="/pictures/HTH_0194.JPG"
                     label="Câu chuyện của chúng mình"
-                    slides={STORY_SLIDES1}
+                    slides={storySlides[1]}
                   />
                 </article>
                 <article className="story-entry story-entry-center">
@@ -658,7 +789,7 @@ export default function WeddingInvitation() {
                   <StoryVisual
                     background="/pictures/HTH_9997.JPG"
                     label="Câu chuyện của chúng mình"
-                    slides={STORY_SLIDES2}
+                    slides={storySlides[2]}
                   />
                   <div className="story-note">
                     <span>FOREVER STARTS HERE</span>
@@ -692,34 +823,6 @@ export default function WeddingInvitation() {
               ))}
             </div>
 
-            <div className="event-grid reveal fade-up" data-reveal>
-              <div className="event-groom">
-                <span className="event-icon">♡</span>
-                <h3>Lễ Thành Hôn tại Nhà Trai</h3>
-                <p>11:00 · Thứ Năm</p>
-                <p>15 tháng 10, 2026</p>
-                <iframe
-                  className="ceremony-map"
-                  title="Bản đồ nhà trai"
-                  src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d933.0468070926343!2d105.4565710965466!3d19.97122584026793!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e1!3m2!1sen!2s!4v1788414900773!5m2!1sen!2s"
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
-              </div>
-              <div className="event-bride">
-                <span className="event-icon">⌖</span>
-                <h3>Lễ Thành Hôn tại Nhà Gái</h3>
-                <p>06:30 · Thứ Năm</p>
-                <p>15 tháng 10, 2026</p>
-                <iframe
-                  className="ceremony-map"
-                  title="Bản đồ nhà gái"
-                  src="https://www.google.com/maps/embed?pb=!1m14!1m12!1m3!1d658.8001155960343!2d104.86627166744569!3d20.20024267734962!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!5e1!3m2!1sen!2s!4v1788414966559!5m2!1sen!2s"
-                  loading="lazy"
-                  referrerPolicy="no-referrer-when-downgrade"
-                />
-              </div>
-            </div>
           </section>
 
           <section id="timeline" className="section timeline-section reveal" data-reveal>
@@ -754,9 +857,16 @@ export default function WeddingInvitation() {
                     image={index === 0
                       ? "https://images.unsplash.com/photo-1519741497674-611481863552?auto=format&fit=crop&w=700&q=82"
                       : "https://images.unsplash.com/photo-1519225421980-715cb0215aed?auto=format&fit=crop&w=700&q=82"}
+                    mapSrc={index === 1 ? BRIDE_MAP_URL : undefined}
+                    mapTitle="Bản đồ nhà gái"
                   />
                   <div className="timeline-arrow" aria-hidden="true">↓</div>
-                  <TimelineCard item={brideItem as string[] | null} theme="bride" />
+                  <TimelineCard
+                    item={brideItem as string[] | null}
+                    theme="bride"
+                    mapSrc={index === 3 ? GROOM_MAP_URL : undefined}
+                    mapTitle="Bản đồ nhà trai"
+                  />
                 </div>
               ))}
             </div>
@@ -765,17 +875,7 @@ export default function WeddingInvitation() {
           <section id="gallery" className="section gallery-section reveal" data-reveal>
             <p className="eyebrow">OUR MEMORIES</p>
             <h2>Moments</h2>
-            <div className="gallery">
-              {GALARIES.map((src, index) => (
-                <img
-                  key={`${src}-${index}`}
-                  className={`gallery-${index + 1} reveal fade-up`}
-                  data-reveal
-                  src={src}
-                  alt={`Wedding moment ${index + 1}`}
-                />
-              ))}
-            </div>
+            <GalleryCarousel images={galleries} />
           </section>
 
           <section id="blessing" className="section blessing-section reveal" data-reveal>
@@ -913,7 +1013,7 @@ export default function WeddingInvitation() {
                 {
                   role: "Lời cảm ơn từ cô dâu",
                   theme: "bride",
-                  image: "/pictures/alone/HTH_0224.JPG",
+                  image: "/pictures/alone/HTH_9578.JPG",
                   text: "Hà Thủy biết ơn gia đình, người thân và bạn bè đã dành cho chúng mình thật nhiều tình cảm trong ngày đặc biệt này. Cảm ơn mọi người đã luôn ở bên, lắng nghe, động viên và gửi những lời chúc ấm áp. Tình yêu thương ấy sẽ luôn là kỷ niệm đẹp mà chúng mình trân trọng trên hành trình phía trước.",
                   signature: "Thương mến, Hà Thủy",
                 },
@@ -959,7 +1059,7 @@ export default function WeddingInvitation() {
                 }}
               >
                 <span className="gift-money gift-money-left" aria-hidden="true">$</span>
-                <span className="gift-transfer-icon" aria-hidden="true">⇄</span>
+                <span className="gift-transfer-icon" aria-hidden="true">QR</span>
                 <span className="gift-money gift-money-right" aria-hidden="true">$</span>
               </button>
             ) : (
@@ -971,15 +1071,15 @@ export default function WeddingInvitation() {
                     bank: "TP Bank",
                     account: "84688688868",
                     holder: "NGUYỄN HỮU TÀI",
-                    qr: "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=VCB%201234567890%20NGUYEN%20HUU%20TAI",
+                    qr: "/pictures/QR/Chong_QR.jpg?size=220x220",
                   },
                   {
                     name: "Cô dâu",
                     person: "Hà Thủy",
                     bank: "TP Bank",
-                    account: "0987654321",
+                    account: "04229804401",
                     holder: "HÀ THỊ THỦY",
-                    qr: "https://api.qrserver.com/v1/create-qr-code/?size=220x220&data=TCB%200987654321%20TRAN%20THI%20HA%20THUY",
+                    qr: "/pictures/QR/Vo_QR.jpg?size=220x220",
                   },
                 ].map(({ name, person, bank, account, holder, qr }) => (
                   <div className="gift-card" key={name}>
@@ -1011,12 +1111,7 @@ export default function WeddingInvitation() {
           </section>
 
           <section className="quote-section reveal" data-reveal>
-            <div
-              className="quote-content"
-              style={{
-                transform: `translate(calc(-40% + ${quotePosition.x}px), calc(-40% + ${quotePosition.y}px))`,
-              }}
-            >
+            <div className="quote-content">
               <span className="quote-mark quote-mark-open">“</span>
               <p>Two souls, one heart, one beautiful journey.</p>
               <span className="quote-mark quote-mark-close">”</span>
