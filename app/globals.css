@@ -22,9 +22,13 @@
 }
 
 * { box-sizing: border-box; }
-html { scroll-behavior: smooth; }
+html {
+  overflow-x: hidden;
+  scroll-behavior: smooth;
+}
 body {
   margin: 0;
+  overflow-x: hidden;
   background:
     linear-gradient(rgba(248, 245, 239, 0.72), rgba(248, 245, 239, 0.72)),
     url("../public/pictures/HTH_0194.JPG") center/cover fixed;
@@ -2117,9 +2121,9 @@ footer > p:nth-of-type(2) {
   }
   .cover .cover-content {
     z-index: 3;
-    width: min(74vw, 280px);
-    max-width: min(74vw, 280px);
-    padding: 16px 12px;
+    width: min(31vw, 140px);
+    max-width: min(31vw, 140px);
+    padding: 16px 4px;
   }
   .cover .cover-wedding-label {
     width: min(100%, 130px);
@@ -2138,9 +2142,9 @@ footer > p:nth-of-type(2) {
   .cover .cover-open-button {
     position: relative;
     z-index: 1;
-    min-width: 164px;
+    min-width: 100%;
     gap: 4px;
-    padding: 12px 16px;
+    padding: 10px 2px;
     font-size: 20px;
     letter-spacing: .06em;
     text-indent: .06em;
