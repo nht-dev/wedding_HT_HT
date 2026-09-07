@@ -1013,7 +1013,7 @@ export default function WeddingInvitation() {
                 {
                   role: "Lời cảm ơn từ cô dâu",
                   theme: "bride",
-                  image: "/pictures/alone/HTH_9578.JPG",
+                  image: "/pictures/alone/HTH_9578.jpg",
                   text: "Hà Thủy biết ơn gia đình, người thân và bạn bè đã dành cho chúng mình thật nhiều tình cảm trong ngày đặc biệt này. Cảm ơn mọi người đã luôn ở bên, lắng nghe, động viên và gửi những lời chúc ấm áp. Tình yêu thương ấy sẽ luôn là kỷ niệm đẹp mà chúng mình trân trọng trên hành trình phía trước.",
                   signature: "Thương mến, Hà Thủy",
                 },
