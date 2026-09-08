@@ -1,4 +1,4 @@
-# Tài & Linh — Online Wedding Invitation
+# Tài & Thủy — Online Wedding Invitation
 
 Demo thiệp cưới online bằng Next.js, TypeScript và CSS thuần.
 
