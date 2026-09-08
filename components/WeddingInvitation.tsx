@@ -28,6 +28,7 @@ function StoryVisual({
   slides,
 }: StoryVisualProps) {
   const [activeSlide, setActiveSlide] = useState(0);
+  const [slideTransition, setSlideTransition] = useState(0);
   const swipeStartRef = useRef<{ id: number; x: number } | null>(null);
   const currentSlide = slides[activeSlide] ?? slides[0];
 
@@ -37,6 +38,7 @@ function StoryVisual({
 
   const changeSlide = (direction: 1 | -1) => {
     if (slides.length < 2) return;
+    setSlideTransition(Math.floor(Math.random() * 4) + 1);
     setActiveSlide((current) => (current + direction + slides.length) % slides.length);
   };
 
@@ -77,7 +79,7 @@ function StoryVisual({
       <div className="story-slides">
         {currentSlide && (
           <Image
-            className="story-slide story-slide-current"
+            className={`story-slide story-slide-current story-slide-transition-${slideTransition}`}
             key={currentSlide}
             src={currentSlide}
             alt={`Khoảnh khắc cưới ${activeSlide + 1}`}
@@ -116,6 +118,8 @@ function StoryVisual({
 function GalleryCarousel({ images }: { images: string[] }) {
   const [activeImage, setActiveImage] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
+  const [transition, setTransition] = useState(1);
+  const [lightboxOpen, setLightboxOpen] = useState(false);
   const galleryRef = useRef<HTMLDivElement | null>(null);
   const currentImage = images[activeImage] ?? images[0];
 
@@ -138,6 +142,7 @@ function GalleryCarousel({ images }: { images: string[] }) {
   useEffect(() => {
     if (!isVisible || images.length < 2) return;
     const timer = window.setInterval(() => {
+      setTransition(Math.floor(Math.random() * 3) + 1);
       setActiveImage((current) => (current + 1) % images.length);
     }, 10000);
     return () => window.clearInterval(timer);
@@ -145,15 +150,36 @@ function GalleryCarousel({ images }: { images: string[] }) {
 
   const changeImage = (direction: 1 | -1) => {
     if (images.length < 2) return;
+    setTransition(Math.floor(Math.random() * 3) + 1);
     setActiveImage((current) => (current + direction + images.length) % images.length);
   };
+
+  useEffect(() => {
+    if (!lightboxOpen) return;
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") setLightboxOpen(false);
+      if (event.key === "ArrowLeft") changeImage(-1);
+      if (event.key === "ArrowRight") changeImage(1);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [lightboxOpen, images.length]);
 
   if (!currentImage) return null;
 
   return (
     <div className="gallery" ref={galleryRef}>
       <Image
-        className="gallery-carousel-image"
+        className="gallery-blur-backdrop"
+        src={currentImage}
+        alt=""
+        width={1200}
+        height={900}
+        quality={35}
+        aria-hidden="true"
+      />
+      <Image
+        className={`gallery-carousel-image gallery-transition-${transition}`}
         key={currentImage}
         src={currentImage}
         alt={`Wedding moment ${activeImage + 1}`}
@@ -161,6 +187,7 @@ function GalleryCarousel({ images }: { images: string[] }) {
         height={900}
         quality={45}
         loading="lazy"
+        onClick={() => setLightboxOpen(true)}
       />
       {images.length > 1 && (
         <>
@@ -184,6 +211,43 @@ function GalleryCarousel({ images }: { images: string[] }) {
             {activeImage + 1} / {images.length}
           </p>
         </>
+      )}
+      {lightboxOpen && currentImage && (
+        <div className="gallery-lightbox" role="dialog" aria-modal="true" aria-label="Xem ảnh kỷ niệm lớn" onClick={() => setLightboxOpen(false)}>
+          <button
+            type="button"
+            className="gallery-lightbox-close"
+            aria-label="Đóng ảnh lớn"
+            onClick={() => setLightboxOpen(false)}
+          >
+            ×
+          </button>
+          <button
+            type="button"
+            className="gallery-lightbox-control gallery-lightbox-previous"
+            aria-label="Ảnh trước"
+            onClick={(event) => { event.stopPropagation(); changeImage(-1); }}
+          >
+            ←
+          </button>
+          <Image
+            className="gallery-lightbox-image"
+            src={currentImage}
+            alt={`Wedding moment ${activeImage + 1}`}
+            width={1800}
+            height={1350}
+            quality={75}
+            onClick={(event) => event.stopPropagation()}
+          />
+          <button
+            type="button"
+            className="gallery-lightbox-control gallery-lightbox-next"
+            aria-label="Ảnh tiếp theo"
+            onClick={(event) => { event.stopPropagation(); changeImage(1); }}
+          >
+            →
+          </button>
+        </div>
       )}
     </div>
   );
@@ -270,6 +334,7 @@ export default function WeddingInvitation() {
   const [showCoupleReveal, setShowCoupleReveal] = useState(false);
   const [showGiftReveal, setShowGiftReveal] = useState(false);
   const [giftAnimating, setGiftAnimating] = useState(false);
+  const [qrPreview, setQrPreview] = useState<{ src: string; person: string } | null>(null);
   const [savedSignaturesLoaded, setSavedSignaturesLoaded] = useState(false);
   const [currentTrack, setCurrentTrack] = useState("");
   const heartRainRef = useRef<HTMLDivElement | null>(null);
@@ -734,7 +799,14 @@ export default function WeddingInvitation() {
             <div className="hero-content reveal fade-up" data-reveal>
               <p className="eyebrow">WE ARE GETTING MARRIED</p>
               <h1> Hữu Tài <span>&</span> Hà Thủy</h1>
-              <p>15.10.2026 · Thanh Hóa</p>
+              <div className="hero-event-meta">
+                <div className="hero-event-topline">
+                  <span>THỨ NĂM</span>
+                  <i className="hero-event-divider" aria-hidden="true" />
+                  <span>15.10.2026</span>
+                </div>
+                <p>THANH HÓA</p>
+              </div>
             </div>
             <div className="scroll">Kéo xuống↓</div>
           </section>
@@ -787,7 +859,7 @@ export default function WeddingInvitation() {
                     <p className="promise-text">Mỗi ngày bên nhau là một trang mới.</p>
                   </div>
                   <StoryVisual
-                    background="/pictures/HTH_9997.JPG"
+                    background="/pictures/slide3/HTH_9996.JPG"
                     label="Câu chuyện của chúng mình"
                     slides={storySlides[2]}
                   />
@@ -1088,7 +1160,14 @@ export default function WeddingInvitation() {
                         <p className="gift-role">{name}</p>
                         <h3>{person}</h3>
                       </div>
-                      <img className="qr-code" src={qr} alt={`${person} QR code`} />
+                      <button
+                        type="button"
+                        className="qr-trigger"
+                        aria-label={`Xem QR chuyển khoản của ${person}`}
+                        onClick={() => setQrPreview({ src: qr, person })}
+                      >
+                        <img className="qr-code" src={qr} alt={`${person} QR code`} />
+                      </button>
                     </div>
                     <div className="bank-info">
                       <div className="bank-row">
@@ -1106,6 +1185,31 @@ export default function WeddingInvitation() {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+            {qrPreview && (
+              <div
+                className="qr-lightbox"
+                role="dialog"
+                aria-modal="true"
+                aria-label={`QR chuyển khoản của ${qrPreview.person}`}
+                onClick={() => setQrPreview(null)}
+              >
+                <div className="qr-lightbox-panel" onClick={(event) => event.stopPropagation()}>
+                  <button
+                    type="button"
+                    className="qr-lightbox-close"
+                    aria-label="Đóng QR"
+                    onClick={() => setQrPreview(null)}
+                  >
+                    ×
+                  </button>
+                  <p>QR chuyển khoản - {qrPreview.person}</p>
+                  <img src={qrPreview.src} alt={`QR chuyển khoản của ${qrPreview.person}`} />
+                  <a className="primary-button qr-download" href={qrPreview.src} download>
+                    TẢI QR VỀ
+                  </a>
+                </div>
               </div>
             )}
           </section>
