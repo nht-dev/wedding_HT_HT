@@ -645,7 +645,7 @@ button {
   position: absolute;
   inset: 0;
   z-index: 0;
-  background: url("../public/pictures/slide3/HTH_9996.jpg") center/cover;
+  background: url("../public/pictures/slide3/HTH_9996.jpg") center top/cover;
   filter: saturate(0.95) brightness(0.75);
 }
 .hero {
@@ -1821,6 +1821,9 @@ button {
   font-weight: 600;
   text-align: right;
 }
+.moments-title {
+  color: #3f1515 !important;
+}
 
 .gallery-section {
   position: relative;
@@ -1972,9 +1975,10 @@ button {
   position: fixed;
   inset: 0;
   z-index: 50;
-  overflow: hidden;
-  display: grid;
-  place-items: center;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: auto;
   padding: 50px 70px;
   background: rgba(20, 17, 15, .9);
   animation: galleryLightboxIn .25s ease both;
@@ -1998,14 +2002,18 @@ button {
   transform: translateX(-50%);
   pointer-events: none;
 }
-.gallery .gallery-lightbox-image {
+.gallery-lightbox-image {
+  display: block;
+  position: relative;
+  z-index: 1;
   width: auto !important;
   height: auto !important;
-  max-width: calc(100vw - 120px) !important;
-  max-height: calc(100vh - 130px) !important;
+  max-width: min(100%, calc(100vw - 120px)) !important;
+  max-height: min(100%, calc(100vh - 130px)) !important;
   object-fit: contain !important;
   object-position: center;
   box-sizing: border-box;
+  margin: 0 auto;
   cursor: zoom-out;
   box-shadow: none;
   animation: none;
@@ -2052,11 +2060,11 @@ button {
   .gallery-lightbox-previous { left: 6px; }
   .gallery-lightbox-next { right: 6px; }
   .gallery-lightbox-close { top: 12px; right: 12px; width: 34px; height: 34px; font-size: 22px; }
-  .gallery .gallery-lightbox-image {
+  .gallery-lightbox-image {
     width: auto !important;
-    max-width: calc(100vw - 76px) !important;
+    max-width: min(100%, calc(100vw - 76px)) !important;
     height: auto !important;
-    max-height: calc(100vh - 130px) !important;
+    max-height: min(100%, calc(100vh - 130px)) !important;
   }
 }
 

@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import { createPortal } from "react-dom";
 
 const EVENT_DATE = new Date("2026-10-15T11:00:00+07:00").getTime();
 const SAVED_SIGNATURES_KEY = "wedding-saved-signatures";
@@ -212,7 +213,7 @@ function GalleryCarousel({ images }: { images: string[] }) {
           </p>
         </>
       )}
-      {lightboxOpen && currentImage && (
+      {lightboxOpen && currentImage && typeof document !== "undefined" && createPortal(
         <div className="gallery-lightbox" role="dialog" aria-modal="true" aria-label="Xem ảnh kỷ niệm lớn" onClick={() => setLightboxOpen(false)}>
           <button
             type="button"
@@ -247,7 +248,8 @@ function GalleryCarousel({ images }: { images: string[] }) {
           >
             →
           </button>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
@@ -946,7 +948,7 @@ export default function WeddingInvitation() {
 
           <section id="gallery" className="section gallery-section reveal" data-reveal>
             <p className="eyebrow">OUR MEMORIES</p>
-            <h2>Moments</h2>
+            <h2 className="moments-title">Moments</h2>
             <GalleryCarousel images={galleries} />
           </section>
 
