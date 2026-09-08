@@ -859,7 +859,7 @@ export default function WeddingInvitation() {
                     <p className="promise-text">Mỗi ngày bên nhau là một trang mới.</p>
                   </div>
                   <StoryVisual
-                    background="/pictures/slide3/HTH_9996.JPG"
+                    background="/pictures/slide3/HTH_9996.jpg"
                     label="Câu chuyện của chúng mình"
                     slides={storySlides[2]}
                   />
